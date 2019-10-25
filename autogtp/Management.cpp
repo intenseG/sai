@@ -284,9 +284,9 @@ QString Management::getOptionsString(const QJsonObject &opt, const QString &rnd)
     options.append(getBoolOption(opt, "dumbpass", " -d ", true));
     options.append(getBoolOption(opt, "noise", " -n ", true));
     options.append(" --noponder ");
-    if (rnd != "") {
-        options.append(" -s " + rnd + " ");
-    }
+    // if (rnd != "") {
+    //     options.append(" -s " + rnd + " ");
+    // }
     options.append(getOption(opt, "other_options", " ", ""));
     return options;
 }

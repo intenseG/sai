@@ -3,10 +3,15 @@
 /autogtp
 /*.sgf
 /*.gz
+/*.zip
 /moc_*.cpp
 /moc_*.h
 /autogtp.pro.user
+bsk-gpu-0.17.3/
+bsk-cpu-0.17.3/
 sai-0.17.3-gpu/
+get-task_match.txt
+
 
 # Weight files
 /[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]
