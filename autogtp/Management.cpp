@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2018 Marco Calignano
-    Coptright (C) 2018-2019 SAI Team
+    Copyright (C) 2018 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <cmath>
@@ -84,6 +84,8 @@ void Management::runTuningProcess(const QString &tuneCmdLine) {
     while (tuneProcess.state() == QProcess::Running) {
         tuneProcess.waitForReadyRead(1000);
         QByteArray text = tuneProcess.readAllStandardOutput();
+        // int version_start = text.indexOf("Leela Zero ") + 11;
+        // if (version_start > 10) {
         int version_start = text.indexOf("SAI ") + 4;
         if (version_start > 3) {
             int version_end = text.indexOf(" ", version_start);
@@ -92,7 +94,7 @@ void Management::runTuningProcess(const QString &tuneCmdLine) {
         QTextStream(stdout) << text;
         QTextStream(stdout) << tuneProcess.readAllStandardError();
     }
-    QTextStream(stdout) << "Found SAI Version : " << m_leelaversion << endl;
+    QTextStream(stdout) << "Found Leela Version : " << m_leelaversion << endl;
     tuneProcess.waitForFinished(-1);
 }
 
@@ -114,7 +116,7 @@ void Management::giveAssignments() {
     QTextStream(stdout) << "Starting tuning process, please wait..." << endl;
 
     Order tuneOrder = getWork(true);
-    QString tuneCmdLine("./sai --batchsize=1 --tune-only -w networks/");
+    QString tuneCmdLine("leelaz --batchsize=5 --tune-only -w networks/");
     tuneCmdLine.append(tuneOrder.parameters()["network"] + ".gz");
     if (m_gpusList.isEmpty()) {
         runTuningProcess(tuneCmdLine);
@@ -277,8 +279,8 @@ QString Management::getOptionsString(const QJsonObject &opt, const QString &rnd)
     options.append(getOption(opt, "noise_value", " --noise-value ", ""));
     options.append(getOption(opt, "resignation_percent", " -r ", "1"));
     options.append(getOption(opt, "randomcnt", " -m ", "30"));
-    options.append(getOption(opt, "threads", " -t ", "1"));
-    options.append(getOption(opt, "batchsize", " --batchsize ", "1"));
+    options.append(getOption(opt, "threads", " -t ", "6"));
+    options.append(getOption(opt, "batchsize", " --batchsize ", "5"));
     options.append(getBoolOption(opt, "dumbpass", " -d ", true));
     options.append(getBoolOption(opt, "noise", " -n ", true));
     options.append(" --noponder ");
@@ -362,24 +364,17 @@ Order Management::getWorkInternal(bool tuning) {
 #ifdef WIN32
     prog_cmdline.append(".exe");
 #endif
-    QString url;
-    url.append(m_serverUrl+"get-task/");
+    prog_cmdline.append(" -s -J");
+    prog_cmdline.append(" "+m_serverUrl+"get-task/");
     if (tuning) {
-        url.append("0");
+        prog_cmdline.append("0");
     } else {
-        url.append(QString::number(AUTOGTP_VERSION));
+        prog_cmdline.append(QString::number(AUTOGTP_VERSION));
         if (!m_leelaversion.isEmpty())
-            url.append("/"+m_leelaversion);
+            prog_cmdline.append("/"+m_leelaversion);
     }
-    QStringList arguments;
-    arguments << "-s" << "-J";
-    if (!m_username.isEmpty() && !m_password.isEmpty())
-        arguments << "-F" << "username=" + m_username << "-F" << "password=" + m_hashedPassword;
-    else
-        arguments << "-F" << "key=" + m_publicAuthKey;
-    arguments << url;
     QProcess curl;
-    curl.start(prog_cmdline, arguments);
+    curl.start(prog_cmdline);
     curl.waitForFinished(-1);
 
     if (curl.exitCode()) {
@@ -389,10 +384,8 @@ Order Management::getWorkInternal(bool tuning) {
     }
     QJsonDocument doc;
     QJsonParseError parseError;
-    QByteArray curlOutput = curl.readAllStandardOutput();
-    doc = QJsonDocument::fromJson(curlOutput, &parseError);
+    doc = QJsonDocument::fromJson(curl.readAllStandardOutput(), &parseError);
     if (parseError.error != QJsonParseError::NoError) {
-        QTextStream(stdout) << "Getting task returned: " << curlOutput << endl;
         std::string errorString = parseError.errorString().toUtf8().constData();
         throw NetworkException("JSON parse error: " + errorString);
     }
@@ -416,7 +409,7 @@ Order Management::getWorkInternal(bool tuning) {
             << "Server requires client version " << required_version
             << " but we are version " << m_version << endl;
         QTextStream(stdout)
-            << "Check https://github.com/sai-dev/sai for updates." << endl;
+            << "Check https://github.com/gcp/leela-zero for updates." << endl;
         exit(EXIT_FAILURE);
     }
     //passing leela version

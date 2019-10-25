@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -457,7 +457,6 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor,
 
     auto leela_name = std::string{PROGRAM_NAME};
     leela_name.append(" " + std::string(PROGRAM_VERSION));
-    leela_name.append(" " + std::string(PROGRAM_VERSION_RELEASE));
     if (!cfg_weightsfile.empty()) {
         auto pos = cfg_weightsfile.find_last_of("\\/");
         if (std::string::npos == pos) {

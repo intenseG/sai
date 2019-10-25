@@ -1,17 +1,17 @@
-# This file is part of SAI, which is a fork of Leela Zero.
+# This file is part of Leela Zero.
 # Copyright (C) 2017 Marco Calignano
 # Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
 # Copyright (C) 2018-2019 SAI Team
-# SAI is free software: you can redistribute it and/or modify
+# Leela Zero is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# SAI is distributed in the hope that it will be useful,
+# Leela Zero is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License
-# along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+# along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.1)
 
@@ -86,9 +86,6 @@ endif()
 if(USE_HALF)
   add_definitions(-DUSE_HALF)
 endif()
-if(BOARD_SIZE)
-  add_definitions(-DBOARD_SIZE=${BOARD_SIZE})
-endif()
 
 set(IncludePath "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/src/Eigen")
 set(SrcPath "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -112,17 +109,14 @@ list(REMOVE_ITEM leelaz_SRC ${leelaz_MAIN})
 # Reuse for leelaz and gtest
 add_library(objs OBJECT ${leelaz_SRC})
 
-add_executable(sai $<TARGET_OBJECTS:objs> ${leelaz_MAIN})
+add_executable(leelaz $<TARGET_OBJECTS:objs> ${leelaz_MAIN})
 
-# For compatibility with Leela Zero scripts
-add_custom_target(leelaz DEPENDS sai)
-
-target_link_libraries(sai ${Boost_LIBRARIES})
-target_link_libraries(sai ${BLAS_LIBRARIES})
-target_link_libraries(sai ${OpenCL_LIBRARIES})
-target_link_libraries(sai ${ZLIB_LIBRARIES})
-target_link_libraries(sai ${CMAKE_THREAD_LIBS_INIT})
-install(TARGETS sai DESTINATION ${CMAKE_INSTALL_BINDIR})
+target_link_libraries(leelaz ${Boost_LIBRARIES})
+target_link_libraries(leelaz ${BLAS_LIBRARIES})
+target_link_libraries(leelaz ${OpenCL_LIBRARIES})
+target_link_libraries(leelaz ${ZLIB_LIBRARIES})
+target_link_libraries(leelaz ${CMAKE_THREAD_LIBS_INIT})
+install(TARGETS leelaz DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(Qt5Core_FOUND)
     if(NOT Qt5Core_VERSION VERSION_LESS "5.3.0")
@@ -156,11 +150,11 @@ string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" MAJOR_VERSION "${VERSION}")
 string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" MINOR_VERSION "${VERSION}")
 
 SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_NAME "sai")
+SET(CPACK_DEBIAN_PACKAGE_NAME "leelaz")
 SET(CPACK_DEBIAN_PACKAGE_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "The SAI Team https://github.com/sai-dev/sai")
-SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "A fork of Leela Zero which is able to target high scores in the game of Go")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Gian-Carlo Pascutto https://github.com/gcp/leela-zero")
+SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Go engine with no human-provided knowledge, modeled after the AlphaGo Zero paper.")
 SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "games")
 SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)

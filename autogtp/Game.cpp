@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2018 Marco Calignano
-    Coptright (C) 2018-2019 SAI Team
+    Copyright (C) 2018 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QUuid>
@@ -48,11 +48,11 @@ void Game::error(int errnum) {
     switch (errnum) {
         case Game::NO_LEELAZ:
             QTextStream(stdout)
-                << "No 'sai' binary found." << endl;
+                << "No 'leelaz' binary found." << endl;
             break;
         case Game::PROCESS_DIED:
             QTextStream(stdout)
-                << "The 'sai' process died unexpected." << endl;
+                << "The 'leelaz' process died unexpected." << endl;
             break;
         case Game::WRONG_GTP:
             QTextStream(stdout)
@@ -136,7 +136,7 @@ void Game::checkVersion(const VersionTuple &min_version) {
     QStringList version_list = version_buff.split(".");
     if (version_list.size() < 2) {
         QTextStream(stdout)
-            << "Unexpected SAI version: " << version_buff << endl;
+            << "Unexpected Leela Zero version: " << version_buff << endl;
         exit(EXIT_FAILURE);
     }
     if (version_list.size() < 3) {
@@ -147,13 +147,13 @@ void Game::checkVersion(const VersionTuple &min_version) {
     versionCount += version_list[2].toInt() - std::get<2>(min_version);
     if (versionCount < 0) {
         QTextStream(stdout)
-            << "SAI version is too old, saw " << version_buff
+            << "Leela version is too old, saw " << version_buff
             << " but expected "
             << std::get<0>(min_version) << "."
             << std::get<1>(min_version) << "."
             << std::get<2>(min_version)  << endl;
         QTextStream(stdout)
-            << "Check https://github.com/sai-dev/sai for updates." << endl;
+            << "Check https://github.com/gcp/leela-zero for updates." << endl;
         exit(EXIT_FAILURE);
     }
     if (!eatNewLine()) {
@@ -406,8 +406,8 @@ bool Game::komi(float komi) {
 
 void Game::fixSgfPlayer(QString& sgfData, const Engine& whiteEngine) {
     QRegularExpression oldPlayer("PW\\[Human\\]");
-    QString playerName("PB[SAI ");
-    QRegularExpression le("PB\\[SAI \\S+ ");
+    QString playerName("PB[Leela Zero ");
+    QRegularExpression le("PB\\[Leela Zero \\S+ ");
     QRegularExpressionMatch match = le.match(sgfData);
     if (match.hasMatch()) {
         playerName = match.captured(0);
@@ -423,7 +423,7 @@ void Game::fixSgfComment(QString& sgfData, const Engine& whiteEngine,
     // If this function is modified, a corresponding update is
     // required to SGFTree::state_to_string() in order to get the same
     // sgfhash as the server
-    QRegularExpression oldComment("(C\\[SAI)( options:.*)\\]");
+    QRegularExpression oldComment("(C\\[Leela Zero)( options:.*)\\]");
     QString comment("\\1");
     if (!isSelfPlay) {
         comment += " Black";

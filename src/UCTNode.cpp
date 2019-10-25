@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto
     Copyright (C) 2018-2019 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -385,11 +385,11 @@ void UCTNode::set_policy(float policy) {
 
 #ifdef USE_EVALCMD
 void UCTNode::set_progid(int id) {
-    assert(id >= 0);
-    m_progid.push_back(id);
+    assert(m_progid == -1 && id >= 0);
+    m_progid = id;
 }
 
-std::vector<int>& UCTNode::get_progid() {
+int UCTNode::get_progid() const {
     return m_progid;
 }
 #endif
@@ -402,7 +402,7 @@ bool UCTNode::low_visits_child(UCTNode* const child) const {
     // father  4-6  child up to 3 low
     // father  7-12 child up to 4 low
     // father 13-20 child up to 5 low
-    // father 21-30 child up to 6 low ...
+    // father 14-30 child up to 6 low ...
     // If the child visits are high, then the child node is surely
     // good and reliable, otherwise it may be a wrong move that is
     // going to get dropped from tree search.
@@ -759,7 +759,7 @@ void UCTNode::get_subtree_alpkts(std::vector<float> & vector,
     if (missing_nodes > 0 && is_tromptaylor_scoring) {
         // check: this seems to happen only on second pass node, where
         // get_net_alpkt() would return a meningless value
-
+        
         const std::vector<float> rep(missing_nodes, get_net_alpkt());
         vector.insert(vector.end(), std::begin(rep), std::end(rep));
     }

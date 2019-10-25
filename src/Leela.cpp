@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -55,22 +55,17 @@ using namespace Utils;
 
 static void license_blurb() {
     printf(
-        "SAI %s release %s (%dx%d) is a fork of Leela Zero.\n"
-        "Leela Zero Copyright (C) 2017-2019  Gian-Carlo Pascutto and contributors.\n"
-        "SAI Copyright (C) 2018-2019 SAI Team.\n"
+        "Leela Zero %s  Copyright (C) 2017-2019  Gian-Carlo Pascutto and contributors\n"
         "This program comes with ABSOLUTELY NO WARRANTY.\n"
         "This is free software, and you are welcome to redistribute it\n"
         "under certain conditions; see the COPYING file for details.\n\n",
-        PROGRAM_VERSION, PROGRAM_VERSION_RELEASE, BOARD_SIZE, BOARD_SIZE);
+        PROGRAM_VERSION);
 }
 
 static void calculate_thread_count_cpu(boost::program_options::variables_map & vm) {
     // If we are CPU-based, there is no point using more than the number of CPUs/
     auto cfg_max_threads = std::min(SMP::get_num_cpus(), size_t{MAX_CPUS});
 
-#ifndef NDEBUG
-    cfg_max_threads = 1;
-#endif
     if (vm["threads"].as<unsigned int>() > 0) {
         auto num_threads = vm["threads"].as<unsigned int>();
         if (num_threads > cfg_max_threads) {
@@ -126,10 +121,6 @@ static void calculate_thread_count_gpu(boost::program_options::variables_map & v
         cfg_num_threads = std::min(cfg_max_threads, cfg_batch_size * gpu_count * 2);
     }
 
-#ifndef NDEBUG
-    cfg_num_threads = 1;
-    cfg_batch_size = 1;
-#endif
     if (cfg_num_threads < cfg_batch_size) {
         printf("Number of threads = %d must be no smaller than batch size = %d\n", cfg_num_threads, cfg_batch_size);
         exit(EXIT_FAILURE);
@@ -148,7 +139,7 @@ static void parse_commandline(int argc, char *argv[]) {
         ("gtp,g", "Enable GTP mode.")
         ("japanese,j", "Enable Japanese scoring mode.")
         ("threads,t", po::value<unsigned int>()->default_value(0),
-                      "Number of threads to use. Select 0 to let SAI pick a reasonable default.")
+                      "Number of threads to use. Select 0 to let leela-zero pick a reasonable default.")
         ("playouts,p", po::value<int>(),
                        "Weaken engine by limiting the number of playouts. "
                        "Requires --noponder.")
@@ -196,7 +187,7 @@ static void parse_commandline(int argc, char *argv[]) {
                 "ID of the OpenCL device(s) to use (disables autodetection).")
         ("full-tuner", "Try harder to find an optimal OpenCL tuning.")
         ("tune-only", "Tune OpenCL only and then exit.")
-        ("batchsize", po::value<unsigned int>()->default_value(0), "Max batch size.  Select 0 to let SAI pick a reasonable default.")
+        ("batchsize", po::value<unsigned int>()->default_value(0), "Max batch size.  Select 0 to let leela-zero pick a reasonable default.")
 #ifdef USE_HALF
         ("precision", po::value<std::string>(),
             "Floating-point precision (single/half/auto).\n"
@@ -368,8 +359,8 @@ static void parse_commandline(int argc, char *argv[]) {
 
     cfg_weightsfile = vm["weights"].as<std::string>();
     if (vm["weights"].defaulted() && !boost::filesystem::exists(cfg_weightsfile)) {
-        printf("A network weights file %dx%d is required to use the program.\n", BOARD_SIZE, BOARD_SIZE);
-        printf("By default, SAI looks for it in %s.\n", cfg_weightsfile.c_str());
+        printf("A network weights file is required to use the program.\n");
+        printf("By default, Leela Zero looks for it in %s.\n", cfg_weightsfile.c_str());
         exit(EXIT_FAILURE);
     }
 
@@ -663,7 +654,7 @@ int main(int argc, char *argv[]) {
     for (;;) {
         if (!cfg_gtp_mode) {
             maingame->display_state();
-            std::cout << "SAI: ";
+            std::cout << "Leela: ";
         }
 
         auto input = std::string{};

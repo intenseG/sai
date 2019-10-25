@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2018 Marco Calignano
-    Coptright (C) 2018-2019 SAI Team
+    Copyright (C) 2018 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Job.h"
@@ -37,7 +37,7 @@ void Job::init(const Order &o) {
     QStringList version_list = o.parameters()["leelazVer"].split(".");
     if (version_list.size() < 2) {
         QTextStream(stdout)
-                << "Unexpected SAI version: " << o.parameters()["leelazVer"] << endl;
+                << "Unexpected Leela Zero version: " << o.parameters()["leelazVer"] << endl;
         exit(EXIT_FAILURE);
     }
     if (version_list.size() < 3) {

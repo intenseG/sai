@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 #
-#    This file is part of SAI, which is a fork of Leela Zero.
-#    Copyright (C) 2018-2019 SAI Team
+#    This file is part of Leela Zero.
+#    Copyright (C) 2018 SAI Team
 #
-#    SAI is free software: you can redistribute it and/or modify
+#    Leela Zero is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    SAI is distributed in the hope that it will be useful,
+#    Leela Zero is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+#    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
 # 16 planes, 1 side to move, 1 x BOARD_SQUARES probs, 1 winner = 19 lines
 INPUT_PLANES = 12
@@ -69,7 +69,7 @@ WEIGHTS_FILE_VER = "209"  # 'advanced features' + 'komi policy'
                          # bit 6,  64: chain liberties features (+4 planes)
                          # bit 7, 128: chain size features (+4 planes)
 KOMI_POLICY_CHANS = 14 # only used for komi policy net format
-
+              
 # Network structure -- Sai value head
 # Value head type can be:
 SINGLE = 1 # (Leela Zero)

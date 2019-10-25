@@ -6,6 +6,7 @@
 /moc_*.cpp
 /moc_*.h
 /autogtp.pro.user
+sai-0.17.3-gpu/
 
 # Weight files
 /[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]

@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -110,7 +110,7 @@ public:
     bool low_visits_child(UCTNode* const child) const;
 #ifdef USE_EVALCMD
     void set_progid(int id);
-    std::vector<int>& get_progid();
+    int get_progid() const;
 #endif
 #ifndef NDEBUG
     void set_urgency(float urgency, float psa, float q,
@@ -187,11 +187,7 @@ private:
     float m_eval_base_father{0.0f}; // x base of father node
     float m_eval_bonus_father{0.0f}; // x bar of father node
 #ifdef USE_EVALCMD
-    std::vector<int> m_progid; // progressive unique identifier,
-                               // typically it is just one integer,
-                               // but a second pass can be visited
-                               // more than once and in that case the
-                               // vector is used
+    int m_progid{-1}; // progressive unique identifier
 #endif
 #ifndef NDEBUG
     std::array<float, 5> m_last_urgency;

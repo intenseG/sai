@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2018 Marco Calignano
-    Coptright (C) 2018-2019 SAI Team
+    Copyright (C) 2018 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef GAME_H
@@ -33,14 +33,14 @@ public:
     Engine(const QString& network,
            const QString& options,
            const QStringList& commands = QStringList("time_settings 0 1 0"),
-           const QString& binary = QString("./sai")) :
+           const QString& binary = QString("./leelaz")) :
         m_binary(binary), m_options(options),
         m_network(network), m_commands(commands) {
 #ifdef WIN32
         m_binary.append(".exe");
 #endif
         if (!QFileInfo::exists(m_binary)) {
-            m_binary.remove(0, 2); // ./sai -> sai
+            m_binary.remove(0, 2); // ./leelaz -> leelaz
         }
     }
     Engine() = default;

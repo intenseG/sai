@@ -1,20 +1,20 @@
 /*
-    This file is part of SAI, which is a fork of Leela Zero.
+    This file is part of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    SAI is free software: you can redistribute it and/or modify
+    Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SAI is distributed in the hope that it will be useful,
+    Leela Zero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -46,10 +46,7 @@
  * BOARD_SIZE: Define size of the board to compile Leela with, must be an odd
    number due to winograd tiles
  */
-#ifndef BOARD_SIZE
-#define BOARD_SIZE 19
-#endif
-
+static constexpr auto BOARD_SIZE = 19;
 static_assert(BOARD_SIZE % 2 == 1,
               "Code assumes odd board size, remove at your own risk!");
 
@@ -122,9 +119,8 @@ static constexpr auto KOMI = 7.5f;
  */
 #define USE_EVALCMD
 
-static constexpr auto PROGRAM_NAME = "SAI";
+static constexpr auto PROGRAM_NAME = "Leela Zero";
 static constexpr auto PROGRAM_VERSION = "0.17";
-static constexpr auto PROGRAM_VERSION_RELEASE = "4-SNAPSHOT";
 
 /*
  * OpenBLAS limitation: the default configuration on some Linuxes

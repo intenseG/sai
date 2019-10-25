@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 #
-#    This file is part of SAI, which is a fork of Leela Zero.
+#    This file is part of Leela Zero.
 #    Copyright (C) 2017-2018 Gian-Carlo Pascutto
-#    Copyright (C) 2018-2019 SAI Team
+#    Copyright (C) 2018 SAI Team
 #
-#    SAI is free software: you can redistribute it and/or modify
+#    Leela Zero is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    SAI is distributed in the hope that it will be useful,
+#    Leela Zero is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
+#    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
 import numpy as np
@@ -478,7 +478,7 @@ class TFProcess:
                 print("Model saved in file: {}".format(save_path))
                 leela_path = path + "-" + str(steps) + ".txt"
                 self.save_leelaz_weights(leela_path)
-                print("SAI weights saved to {}".format(leela_path))
+                print("Leela weights saved to {}".format(leela_path))
                 # Things have likely changed enough
                 # that stats are no longer valid.
 
