@@ -291,6 +291,28 @@ float Utils::winner(float board_score) {
     return 0.5f;
 }
 
+// Crazy Rate V1
+double Utils::calc_crazy_rate(int prisoners, double score) {
+    // --- Crazy rate evaluation formula ---
+    // (prisoners * crazy_factor + score * score_factor) * crazy_rate + result_num * crazy_ratio
+
+    // --- Variable description ---
+    // prisoners: Sum of prisoners and dead stones.
+    // score: Black viewpoint score difference.
+    // crazy_factor: Prisoners weights.
+    // score_factor: Score weights.
+    // crazy_rate: Adjusted value.
+    // result_num: 1 if win, 0 if draw, -1 otherwise.
+    // crazy_ratio: win/loss weights.
+    if (score > 0.0001) {
+        return (prisoners * 3.0 + score * 1.2) * 0.007 + 0.4;
+    } else if (score < 0.0001) {
+        return (prisoners * 3.0 + score * 1.2) * 0.007 - 0.4;
+    } else {
+        return prisoners * 3.0 * 0.007;
+    }
+}
+
 const std::string Utils::leelaz_file(std::string file) {
 #if defined(_WIN32) || defined(__ANDROID__)
     boost::filesystem::path dir(boost::filesystem::current_path());

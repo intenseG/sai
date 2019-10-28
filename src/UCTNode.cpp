@@ -369,7 +369,7 @@ float UCTNode::get_net_alpkt() const {
     return m_net_alpkt;
 }
 
-float UCTNode::get_net_crazy_rate() const {
+float UCTNode::get_crazy_rate() const {
     return m_net_crazy_rate;
 }
 
@@ -642,6 +642,10 @@ public:
         if ((a_visit > m_lcb_min_visits) && (b_visit > m_lcb_min_visits)) {
             auto a_lcb = a.get_eval_lcb(m_color);
             auto b_lcb = b.get_eval_lcb(m_color);
+            //auto a_crazy_rate = a.get_crazy_rate() * 0.1f;
+            //auto b_crazy_rate = b.get_crazy_rate() * 0.1f;
+            //a_lcb += a_crazy_rate;
+            //b_lcb += b_crazy_rate;
 
             // Sort on lower confidence bounds
             if (a_lcb != b_lcb) {
@@ -760,7 +764,7 @@ void UCTNode::get_subtree_alpkts(std::vector<float> & vector,
             const auto pass = (child.get_move() == FastBoard::PASS) ? 1 : 0;
             child->get_subtree_alpkts(vector, ++passes * pass,
                                       is_tromptaylor_scoring);
-                       children_visits += child_visits;
+            children_visits += child_visits;
         }
     }
 
@@ -827,6 +831,7 @@ UCTStats UCTNode::get_uct_stats() const {
     stats.alpkt_online_median = m_alpkt_median;
     stats.beta_median = get_beta_median();
     stats.azwinrate_avg = get_azwinrate_avg();
+    stats.crazy_rate = m_net_crazy_rate;
     return stats;
 }
 

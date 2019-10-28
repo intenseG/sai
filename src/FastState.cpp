@@ -230,31 +230,9 @@ float FastState::final_crazy_score() {
     return board.territory_score(get_komi() - 1.0f);
 }
 
-float FastState::final_crazy_rate(float score) {
+double FastState::final_crazy_rate(double score) {
     auto prisoners = board.get_prisoners(get_to_move());
-    return calc_crazy_rate(prisoners, score);
-}
-
-// Crazy Rate V1
-float FastState::calc_crazy_rate(int prisoners, float score) const {
-    // --- Crazy rate evaluation formula ---
-    // (prisoners * crazy_factor + score * score_factor) * crazy_rate + result_num * crazy_ratio
-
-    // --- Variable description ---
-    // prisoners: Sum of prisoners and dead stones.
-    // score: Black viewpoint score difference.
-    // crazy_factor: Prisoners weights.
-    // score_factor: Score weights.
-    // crazy_rate: Adjusted value.
-    // result_num: 1 if win, 0 if draw, -1 otherwise.
-    // crazy_ratio: win/loss weights.
-    if (score > 0.0f) {
-        return (prisoners * 3.0f + score * 1.2f) * 0.007 + 0.4f;
-    } else if (score < 0.0f) {
-        return (prisoners * 3.0f + score * 1.2f) * 0.007 - 0.4f;
-    } else {
-        return prisoners * 3.0f * 0.007;
-    }
+    return Utils::calc_crazy_rate(prisoners, score);
 }
 
 float FastState::get_komi() const {

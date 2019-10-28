@@ -53,6 +53,7 @@ public:
     bool valid() const { return m_valid;  }
     float eval() const { return m_value;  }
     float get_alpkt() const { return m_alpkt; }
+    float get_crazy_rate() const { return m_crazy_rate; }
     float eval_with_bonus(float bonus, float base) const;
     static SearchResult from_eval(float value, float alpkt, float beta, float crazy_rate) {
         return SearchResult(value, alpkt, beta, crazy_rate);
@@ -154,6 +155,7 @@ private:
     void select_dame_sequence(FullBoard *board);
     bool is_stopping (int move) const;
     bool is_better_move(int move1, int move2, float & estimated_score);
+    float get_bestmove_crazy_rate(int bestmove);
     void explore_move(int move);
     void explore_root_nopass();
     void fast_roll_out();

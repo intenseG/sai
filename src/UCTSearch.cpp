@@ -257,7 +257,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
                 result = SearchResult::from_eval(node->get_net_eval(),
                                                  node->get_net_alpkt(),
                                                  node->get_net_beta(),
-                                                 node->get_net_crazy_rate());
+                                                 node->get_crazy_rate());
 #ifndef NDEBUG
                 myprintf(": Chn (net) %.3f\n", node->get_net_alpkt());
 #endif
@@ -291,7 +291,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
 #ifdef USE_EVALCMD
                 node->set_progid(m_nodecounter++);
 #endif
-                result = SearchResult::from_eval(value, alpkt, beta, 1.0f);
+                result = SearchResult::from_eval(value, alpkt, beta, node->get_crazy_rate());
 #ifndef NDEBUG
                 myprintf(": new %.3f\n", alpkt);
 #endif
@@ -349,7 +349,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
     auto current_node_result = SearchResult::from_eval(node->get_net_eval(),
                                                        node->get_net_alpkt(),
                                                        node->get_net_beta(),
-                                                       node->get_net_crazy_rate());
+                                                       node->get_crazy_rate());
 
     if (result.valid()) {
         // If we are restricting Tromp-Taylor, this is a first pass
@@ -427,17 +427,18 @@ void UCTSearch::dump_stats(FastState & state, UCTNode & parent) {
         auto pv = move + " " + get_pv(tmpstate, *node);
         
 #ifdef NDEBUG
-        myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (A: %4.1f) PV: %s\n",
+        myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
                  move.c_str(),
                  node->get_visits(),
                  node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
                  std::max(0.0f, node->get_eval_lcb(color) * 100.0f),
                  node->get_policy() * 100.0f,
+                 node->get_crazy_rate(),
                  node->get_alpkt_online_median(),
                  pv.c_str());
 #else
         myprintf("%4s -> %7d (U: %5.2f%%, q: %5.2f%%, num: %5.2f, den: %4d) "
-                 "(V: %5.2f%%) (LCB: %8.5f%%) (N: %5.2f%%) (A: %4.1f) PV: %s\n",
+                 "(V: %5.2f%%) (LCB: %8.5f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
                  move.c_str(),
                  node->get_visits(),
                  node->get_urgency()[0] * 100.0f,
@@ -447,6 +448,7 @@ void UCTSearch::dump_stats(FastState & state, UCTNode & parent) {
                  node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
                  node->get_eval_lcb(color) * 100.0f,
                  node->get_policy() * 100.0f,
+                 node->get_crazy_rate(),
                  node->get_alpkt_online_median(),
                  pv.c_str());
 #endif
@@ -619,7 +621,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     }
 
     // Make sure best is first
-    m_root->sort_children(color,  cfg_lcb_min_visit_ratio * max_visits);
+    m_root->sort_children(color, cfg_lcb_min_visit_ratio * max_visits);
 
     // Check whether to randomize the best move proportional
     // to the playout counts, early game only.
@@ -1512,6 +1514,40 @@ bool UCTSearch::is_better_move(int move1, int move2, float & estimated_score) {
     return is_better;
 }
 
+float UCTSearch::get_bestmove_crazy_rate(int bestmove) {
+    const auto bestmove_nodeptr = m_root->select_child(bestmove);
+    if (bestmove_nodeptr == nullptr) {
+        return 1.0f;
+    }
+    explore_move(bestmove);
+
+    const auto color = m_rootstate.get_to_move();
+    const auto passes = m_rootstate.get_passes() + 1;
+    const auto bestmove_passes = passes * (bestmove == FastBoard::PASS ? 1 : 0);
+    auto bestmove_score = bestmove_nodeptr->get_net_alpkt();
+    // auto bestmove_crazy_rate = bestmove_nodeptr->get_crazy_rate();
+    auto bestmove_median_score = bestmove_nodeptr->estimate_alpkt(bestmove_passes);
+    const auto komi = m_rootstate.get_komi();
+
+    if (color == FastBoard::WHITE) {
+        bestmove_score *= -1.0;
+        bestmove_median_score *= -1.0;
+    }
+
+    auto bestmove_crazy_rate = m_rootstate.final_crazy_rate(bestmove_median_score);
+
+    const auto bestmove_eval = bestmove_nodeptr->get_eval(color);
+    myprintf("Best Move (%s) winrate: %5.2f%%\n"
+             "Crazy Rate: %.2f"
+             "Points (net): %.2f\n"
+             "Points (subtree median): %.2f\n",
+              komi, m_rootstate.board.move_to_text(bestmove).c_str(),
+              bestmove_crazy_rate, bestmove_eval * 100.0f,
+              bestmove_score, bestmove_median_score);
+
+    return bestmove_crazy_rate;
+}
+
 void UCTSearch::fast_roll_out() {
     // consider putting time management here
 
@@ -1536,9 +1572,9 @@ void UCTSearch::fast_roll_out() {
     // passes to zero before starting roll-out.
     m_rootstate.set_passes(0);
 
-#ifndef NDEBUG
+// #ifndef NDEBUG
     auto step = 0;
-#endif
+// #endif
     do {
         int consec_invalid = 0;
         auto chosenmove = FastBoard::PASS;
@@ -1548,9 +1584,9 @@ void UCTSearch::fast_roll_out() {
         m_root->prepare_root_node(m_network, m_rootstate.board.get_to_move(),
                                   m_nodes, m_rootstate, true);
 
-#ifndef NDEBUG
+// #ifndef NDEBUG
         myprintf("Fast roll-out. Step %d. Komi %f\n", step++, m_rootstate.get_komi());
-#endif
+// #endif
         do {
             auto currstate = std::make_unique<GameState>(m_rootstate);
 
@@ -1581,7 +1617,7 @@ void UCTSearch::fast_roll_out() {
                 continue;
             }
 
-#ifndef NDEBUG
+// #ifndef NDEBUG
             const auto first_move = FastBoard::PASS;
 
             myprintf("Roll-out step ends.\n"
@@ -1590,7 +1626,7 @@ void UCTSearch::fast_roll_out() {
                      first->get_visits(),
                      m_rootstate.board.move_to_text(second_move).c_str(),
                      second->get_visits());
-#endif
+// #endif
             // We choose the non-pass move if it doesn't seem to lose
             // points.
             const auto sign = m_rootstate.get_to_move() ==
@@ -1599,16 +1635,24 @@ void UCTSearch::fast_roll_out() {
                 first->estimate_alpkt(m_rootstate.get_passes()+1, true);
             const auto second_score = sign *
                 second->estimate_alpkt(0, true);
+            auto first_crazy_rate = m_rootstate.final_crazy_rate(first_score - 0.5);
+            auto second_crazy_rate = m_rootstate.final_crazy_rate(second_score);
 
-#ifndef NDEBUG
+// #ifndef NDEBUG
             myprintf("Score estimation: %s=%f, %s=%f.\n",
                      m_rootstate.board.move_to_text(first_move).c_str(),
                      first_score,
                      m_rootstate.board.move_to_text(second_move).c_str(),
                      second_score);
-#endif
+            myprintf("Crazy rate estimation: %s=%f, %s=%f.\n",
+                     m_rootstate.board.move_to_text(first_move).c_str(),
+                     first_crazy_rate,
+                     m_rootstate.board.move_to_text(second_move).c_str(),
+                     second_crazy_rate);
+// #endif
 
-            if (second_score > first_score - 0.5) {
+            // if (second_score > first_score - 0.5) {
+            if (second_crazy_rate > first_crazy_rate) {
                 chosenmove = second_move;
                 // If the best move is pass and the second-best loses
                 // points, we pass
@@ -1620,10 +1664,10 @@ void UCTSearch::fast_roll_out() {
 
         m_last_rootstate = std::make_unique<GameState>(m_rootstate);
         m_rootstate.play_move(chosenmove);
-#ifndef NDEBUG
+// #ifndef NDEBUG
         myprintf("Chosen move: %s", m_rootstate.board.move_to_text(chosenmove).c_str());
         m_rootstate.display_state();
-#endif
+// #endif
     } while(m_rootstate.get_passes() < 2);
 
     m_per_node_maxvisits = old_maxvisits;

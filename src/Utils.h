@@ -51,7 +51,8 @@ namespace Utils {
     float sigmoid_interval_avg(float alpkt, float beta, float s, float t);
     float log_sigmoid(float x);
     float median(std::vector<float> & sample);
-    float winner (float score);
+    float winner(float score);
+    double calc_crazy_rate(int prisoners, double score);
 
     template<class T>
     void atomic_add(std::atomic<T> &f, T d) {

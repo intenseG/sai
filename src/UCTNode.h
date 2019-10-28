@@ -50,6 +50,7 @@ struct UCTStats {
     float alpkt_online_median;
     float beta_median;
     float azwinrate_avg;
+    float crazy_rate;
 };
 
 class UCTNode {
@@ -105,7 +106,7 @@ public:
     float get_net_eval() const;
     float get_net_beta() const;
     float get_net_alpkt() const;
-    float get_net_crazy_rate() const;
+    float get_crazy_rate() const;
     float get_alpkt_online_median() const;
     void set_values(float value, float alpkt, float beta, float crazy_rate);
     bool low_visits_child(UCTNode* const child) const;
