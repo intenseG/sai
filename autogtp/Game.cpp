@@ -330,7 +330,7 @@ bool Game::getScore() {
             m_result = "B+Resign ";
             QTextStream(stdout) << "Score: " << m_result << endl;
         }
-    } else{
+    } else {
         write("final_score\n");
         waitForBytesWritten(-1);
         if (!waitReady()) {

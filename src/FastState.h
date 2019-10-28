@@ -59,6 +59,9 @@ public:
     void increment_passes();
 
     float final_score() const;
+    float final_crazy_score();
+    float final_crazy_rate(float score);
+    float calc_crazy_rate(int prisoners, float score) const;
     std::uint64_t get_symmetry_hash(int symmetry) const;
 
     size_t get_movenum() const;

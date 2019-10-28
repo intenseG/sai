@@ -369,14 +369,19 @@ float UCTNode::get_net_alpkt() const {
     return m_net_alpkt;
 }
 
+float UCTNode::get_net_crazy_rate() const {
+    return m_net_crazy_rate;
+}
+
 float UCTNode::get_alpkt_online_median() const {
     return m_alpkt_median;
 }
 
-void UCTNode::set_values(float value, float alpkt, float beta) {
+void UCTNode::set_values(float value, float alpkt, float beta, float crazy_rate) {
     m_net_eval = value;
     m_net_alpkt = alpkt;
     m_net_beta = beta;
+    m_net_crazy_rate = crazy_rate;
 }
 
 void UCTNode::set_policy(float policy) {
@@ -574,8 +579,12 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
 
         const auto denom = 1.0 + visits;
         const auto puct = cfg_puct * psa * (numerator / denom);
+        const auto crazy_rate = m_net_crazy_rate * 0.1;
 
-        auto value = winrate + puct;
+        auto value = winrate + puct + crazy_rate;
+        if (value < 0.0) {
+            value = 0.0;
+        }
         assert(value > std::numeric_limits<double>::lowest());
 
         if (value > best_value) {
@@ -592,7 +601,7 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
     assert(best != nullptr);
     if(best->get_visits() == 0) {
         best->inflate();
-        best->get()->set_values(m_net_eval, m_net_alpkt, m_net_beta);
+        best->get()->set_values(m_net_eval, m_net_alpkt, m_net_beta, m_net_crazy_rate);
     }
 #ifndef NDEBUG
     best->get()->set_urgency(best_value, b_psa, b_q,

@@ -256,14 +256,22 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
             if (cfg_japanese_mode && m_chn_scoring) {
                 result = SearchResult::from_eval(node->get_net_eval(),
                                                  node->get_net_alpkt(),
-                                                 node->get_net_beta());
+                                                 node->get_net_beta(),
+                                                 node->get_net_crazy_rate());
 #ifndef NDEBUG
                 myprintf(": Chn (net) %.3f\n", node->get_net_alpkt());
 #endif
             } else {
-                auto score = currstate.final_score();
-                result = SearchResult::from_score(score);
-                node->set_values(Utils::winner(score), score, 10.0f);
+                auto score = 0.0f;
+                auto crazy_rate = 1.0f;
+                if (cfg_crazy) {
+                    score = currstate.final_crazy_score();
+                    crazy_rate = currstate.final_crazy_rate(score);
+                } else {
+                    score = currstate.final_score();
+                }
+                result = SearchResult::from_score(score, crazy_rate);
+                node->set_values(Utils::winner(score), score, 10.0f, crazy_rate);
 #ifndef NDEBUG
                 myprintf(": TT (score) %.3f\n", score);
 #endif
@@ -274,8 +282,8 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
 #endif
             }
         } else {
-                float value, alpkt, beta;
-                const auto had_children = node->has_children();
+            float value, alpkt, beta;
+            const auto had_children = node->has_children();
             const auto success =
                 node->create_children(m_network, m_nodes, currstate, value, alpkt, beta,
                                       get_min_psa_ratio());
@@ -283,7 +291,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
 #ifdef USE_EVALCMD
                 node->set_progid(m_nodecounter++);
 #endif
-                result = SearchResult::from_eval(value, alpkt, beta);
+                result = SearchResult::from_eval(value, alpkt, beta, 1.0f);
 #ifndef NDEBUG
                 myprintf(": new %.3f\n", alpkt);
 #endif
@@ -340,7 +348,8 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
 
     auto current_node_result = SearchResult::from_eval(node->get_net_eval(),
                                                        node->get_net_alpkt(),
-                                                       node->get_net_beta());
+                                                       node->get_net_beta(),
+                                                       node->get_net_crazy_rate());
 
     if (result.valid()) {
         // If we are restricting Tromp-Taylor, this is a first pass

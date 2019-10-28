@@ -7,10 +7,11 @@
 /moc_*.cpp
 /moc_*.h
 /autogtp.pro.user
-bsk-gpu-0.17.3/
-bsk-cpu-0.17.3/
+bsk-gpu-0.17.*/
+bsk-cpu-0.17.*/
 sai-0.17.3-gpu/
 get-task_match.txt
+autogtp.exe
 
 
 # Weight files

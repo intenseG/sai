@@ -281,13 +281,13 @@ QString Management::getOptionsString(const QJsonObject &opt, const QString &rnd)
     options.append(getOption(opt, "randomcnt", " -m ", "30"));
     options.append(getOption(opt, "threads", " -t ", "6"));
     options.append(getOption(opt, "batchsize", " --batchsize ", "5"));
-    options.append(getBoolOption(opt, "dumbpass", " -d ", true));
+    // options.append(getBoolOption(opt, "dumbpass", " -d ", true));
     options.append(getBoolOption(opt, "noise", " -n ", true));
     options.append(" --noponder ");
-    // if (rnd != "") {
-    //     options.append(" -s " + rnd + " ");
-    // }
-    options.append(getOption(opt, "other_options", " ", ""));
+    if (rnd != "") {
+        options.append(" -s " + rnd + " ");
+    }
+    // options.append(getOption(opt, "other_options", " ", ""));
     return options;
 }
 

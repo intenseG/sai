@@ -54,19 +54,20 @@ public:
     float eval() const { return m_value;  }
     float get_alpkt() const { return m_alpkt; }
     float eval_with_bonus(float bonus, float base) const;
-    static SearchResult from_eval(float value, float alpkt, float beta) {
-        return SearchResult(value, alpkt, beta);
+    static SearchResult from_eval(float value, float alpkt, float beta, float crazy_rate) {
+        return SearchResult(value, alpkt, beta, crazy_rate);
     }
-    static SearchResult from_score(float board_score) {
-        return SearchResult(Utils::winner(board_score), board_score, 10.0f);
+    static SearchResult from_score(float board_score, float crazy_rate) {
+        return SearchResult(Utils::winner(board_score), board_score, 10.0f, crazy_rate);
     }
 private:
-    explicit SearchResult(float value, float alpkt, float beta)
-        : m_valid(true), m_value(value), m_alpkt(alpkt), m_beta(beta) {}
+    explicit SearchResult(float value, float alpkt, float beta, float crazy_rate)
+        : m_valid(true), m_value(value), m_alpkt(alpkt), m_beta(beta), m_crazy_rate(crazy_rate) {}
     bool m_valid{false};
     float m_value{0.5f};
     float m_alpkt{0.0f};
     float m_beta{1.0f};
+    float m_crazy_rate{1.0f};
 };
 
 namespace TimeManagement {

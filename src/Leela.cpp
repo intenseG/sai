@@ -176,6 +176,7 @@ static void parse_commandline(int argc, char *argv[]) {
         ("benchmark", "Test network and exit. Default args:\n-v3200 --noponder "
                       "-m0 -t1 -s1.")
         ("nocache", "Disable neural network cache.")
+        ("crazy", "Enable crazy mode.")
 #ifndef USE_CPU_ONLY
         ("cpu-only", "Use CPU-only implementation and do not use OpenCL device(s).")
 #endif
@@ -462,6 +463,10 @@ static void parse_commandline(int argc, char *argv[]) {
 
     if (vm.count("recordvisits")) {
         cfg_recordvisits = true;
+    }
+
+    if (vm.count("crazy")) {
+        cfg_crazy = true;
     }
 
     if (vm.count("playouts")) {
