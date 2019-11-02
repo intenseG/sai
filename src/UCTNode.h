@@ -76,6 +76,7 @@ public:
     UCTNode& get_best_root_child(int color);
     UCTNode* uct_select_child(const GameState & currstate, bool is_root,
                               int max_visits,
+                              double crazy_rate,
                               const std::vector<int> & move_list,
                               bool nopass = false);
 
@@ -184,7 +185,7 @@ private:
     //    float m_net_value{0.5f};
     float m_net_alpkt{0.0f}; // alpha + \tilde k
     float m_net_beta{1.0f};
-    float m_net_crazy_rate{1.0f};
+    float m_net_crazy_rate{0.5f};
     float m_eval_bonus{0.0f}; // x bar
     float m_eval_base{0.0f}; // x base
     float m_eval_base_father{0.0f}; // x base of father node

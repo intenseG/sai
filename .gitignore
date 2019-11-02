@@ -6,6 +6,8 @@ leelaz
 training/tf/leelalogs
 training/tf/checkpoint
 training/tf/venv
+training/tf/engine1
+training/tf/engine2
 leelaz-model*
 *.orig
 leelaz_opencl_tuning

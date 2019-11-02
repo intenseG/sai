@@ -226,6 +226,10 @@ float FastState::final_score() const {
     return board.area_score(get_komi());
 }
 
+int FastState::get_prisoners() const {
+    return board.get_prisoners(get_to_move());
+}
+
 float FastState::final_crazy_score() {
     return board.territory_score(get_komi() - 1.0f);
 }

@@ -43,6 +43,7 @@ struct StateEval {
     size_t visits = 0;
     float alpkt = 0.0f;
     float beta = 1.0f;
+    float crazy_rate = 0.5f;
     float pi = 0.5f;
     float agent_eval = 0.5f;
     float agent_x_lambda = 0.0f;
@@ -51,11 +52,11 @@ struct StateEval {
     float alpkt_median = 0.0f;
     float alpkt_online_median = 0.0f;
 
-    StateEval(int visits, float alpkt, float beta, float pi,
+    StateEval(int visits, float alpkt, float beta, float crazy_rate, float pi,
               float agent_eval, float agent_x_lambda, float agent_x_mu,
               float agent_eval_avg, float alpkt_median,
               float alpkt_online_median)
-    : visits(visits), alpkt(alpkt), beta(beta), pi(pi),
+    : visits(visits), alpkt(alpkt), beta(beta), crazy_rate(crazy_rate), pi(pi),
         agent_eval(agent_eval), agent_x_lambda(agent_x_lambda),
         agent_x_mu(agent_x_mu), agent_eval_avg(agent_eval_avg),
         alpkt_median(alpkt_median), alpkt_online_median(alpkt_online_median)
@@ -80,6 +81,7 @@ private:
     StateEval m_ev;
     /* float m_alpkt = 0.0f; */
     /* float m_beta = 1.0f; */
+    /* float crazy_rate = 0.5f; */
     /* float m_pi = 0.5f; */
     /* float m_avg_eval = 0.5f; */
     /* float m_eval_bonus = 0.0f; */

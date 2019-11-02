@@ -102,6 +102,7 @@ bool cfg_dumbpass;
 bool cfg_restrict_tt;
 bool cfg_recordvisits;
 bool cfg_crazy;
+// float cfg_crazy_rate;
 #ifdef USE_OPENCL
 std::vector<int> cfg_gpus;
 bool cfg_sgemm_exhaustive;
@@ -516,6 +517,7 @@ void GTP::setup_default_parameters() {
     cfg_noise_weight = 0.25;
     cfg_recordvisits = false;
     cfg_crazy = false;
+    // cfg_crazy_rate = 0.5;
     cfg_blunder_thr = 1.0f;
     cfg_losing_thr = 0.05f;
     // nu = ln(4) => P(X=0) = 0.25

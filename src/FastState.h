@@ -54,6 +54,7 @@ public:
     int get_handicap() const;
     int get_passes() const;
     int get_to_move() const;
+    int get_prisoners() const;
     void set_to_move(int tomove);
     void set_passes(int val);
     void increment_passes();

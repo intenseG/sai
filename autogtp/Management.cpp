@@ -84,17 +84,17 @@ void Management::runTuningProcess(const QString &tuneCmdLine) {
     while (tuneProcess.state() == QProcess::Running) {
         tuneProcess.waitForReadyRead(1000);
         QByteArray text = tuneProcess.readAllStandardOutput();
-        // int version_start = text.indexOf("Leela Zero ") + 11;
-        // if (version_start > 10) {
-        int version_start = text.indexOf("SAI ") + 4;
-        if (version_start > 3) {
+        int version_start = text.indexOf("Leela Zero ") + 11;
+        if (version_start > 10) {
+        // int version_start = text.indexOf("BSK ") + 4;
+        // if (version_start > 3) {
             int version_end = text.indexOf(" ", version_start);
             m_leelaversion = QString(text.mid(version_start, version_end - version_start));
         }
         QTextStream(stdout) << text;
         QTextStream(stdout) << tuneProcess.readAllStandardError();
     }
-    QTextStream(stdout) << "Found Leela Version : " << m_leelaversion << endl;
+    QTextStream(stdout) << "Found BSK Version : " << m_leelaversion << endl;
     tuneProcess.waitForFinished(-1);
 }
 
@@ -116,7 +116,7 @@ void Management::giveAssignments() {
     QTextStream(stdout) << "Starting tuning process, please wait..." << endl;
 
     Order tuneOrder = getWork(true);
-    QString tuneCmdLine("./leelaz --batchsize=5 --tune-only -w networks/");
+    QString tuneCmdLine("./leelaz --batchsize=5 --tune-only --crazy -w networks/");
     tuneCmdLine.append(tuneOrder.parameters()["network"] + ".gz");
     if (m_gpusList.isEmpty()) {
         runTuningProcess(tuneCmdLine);

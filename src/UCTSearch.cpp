@@ -305,11 +305,17 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
 
     auto restrict_return = false;
     auto update_with_current = false;
+    auto crazy_rate = 0.5;
 
     if (node->has_children() && !result.valid()) {
+        if (cfg_crazy) {
+            auto score = currstate.final_crazy_score();
+            crazy_rate = currstate.final_crazy_rate(score);
+        }
         auto next = node->uct_select_child(currstate,
                                            node == m_root.get(),
                                            m_per_node_maxvisits,
+                                           crazy_rate,
                                            m_allowed_root_children,
                                            m_nopass);
         if (next != nullptr) {
@@ -320,7 +326,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
             restrict_return = (cfg_restrict_tt &&
                                currstate.get_passes() == 1 &&
                                move == FastBoard::PASS);
-            
+
             currstate.play_move(move);
             if (move != FastBoard::PASS && currstate.superko()) {
                 next->invalidate();
@@ -349,7 +355,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate,
     auto current_node_result = SearchResult::from_eval(node->get_net_eval(),
                                                        node->get_net_alpkt(),
                                                        node->get_net_beta(),
-                                                       node->get_crazy_rate());
+                                                       crazy_rate);
 
     if (result.valid()) {
         // If we are restricting Tromp-Taylor, this is a first pass
@@ -425,7 +431,30 @@ void UCTSearch::dump_stats(FastState & state, UCTNode & parent) {
         auto tmpstate = FastState{state};
         tmpstate.play_move(node->get_move());
         auto pv = move + " " + get_pv(tmpstate, *node);
-        
+
+        auto win_rate = node->get_visits() ? node->get_raw_eval(color) * 100.0f : 0.0f;
+
+        if (cfg_crazy) {
+            auto crazy_rate = Utils::calc_crazy_rate(state.get_prisoners(), (win_rate - 50.0f) * 0.2f);
+            myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
+                      move.c_str(),
+                      node->get_visits(),
+                      node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
+                      std::max(0.0f, node->get_eval_lcb(color) * 100.0f),
+                      node->get_policy() * 100.0f,
+                      node->get_crazy_rate() * 100.0f,
+                      node->get_alpkt_online_median(),
+                      pv.c_str());
+        } else {
+            myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (A: %4.1f) PV: %s\n",
+                      move.c_str(),
+                      node->get_visits(),
+                      node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
+                      std::max(0.0f, node->get_eval_lcb(color) * 100.0f),
+                      node->get_policy() * 100.0f,
+                      node->get_alpkt_online_median(),
+                      pv.c_str());
+        }
 #ifdef NDEBUG
         myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
                  move.c_str(),
@@ -433,7 +462,7 @@ void UCTSearch::dump_stats(FastState & state, UCTNode & parent) {
                  node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
                  std::max(0.0f, node->get_eval_lcb(color) * 100.0f),
                  node->get_policy() * 100.0f,
-                 node->get_crazy_rate(),
+                 node->get_crazy_rate() * 100.0f,
                  node->get_alpkt_online_median(),
                  pv.c_str());
 #else
@@ -448,7 +477,7 @@ void UCTSearch::dump_stats(FastState & state, UCTNode & parent) {
                  node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
                  node->get_eval_lcb(color) * 100.0f,
                  node->get_policy() * 100.0f,
-                 node->get_crazy_rate(),
+                 node->get_crazy_rate() * 100.0f,
                  node->get_alpkt_online_median(),
                  pv.c_str());
 #endif
@@ -1047,31 +1076,31 @@ int UCTSearch::think(int color, passflag_t passflag) {
         if (!is_better_move(bestmove, FastBoard::PASS, est_score)) {
             auto chn_endstate = std::make_unique<GameState>(m_rootstate);
             chn_endstate->add_komi(est_score);
-#ifndef NDEBUG
+// #ifndef NDEBUG
             chn_endstate->display_state();
             myprintf("Komi modified to %.1f. Roll-out starting.\n",
                      chn_endstate->get_komi());
-#endif
+// #endif
             auto FRO_tree = std::make_unique<UCTSearch>(*chn_endstate, m_network);
             FRO_tree->fast_roll_out();
-#ifndef NDEBUG
+// #ifndef NDEBUG
             myprintf("Roll-out completed.\n");
             chn_endstate->display_state();
-#endif
+// #endif
 
             bestmove = FastBoard::PASS;
             auto jap_endboard = std::make_unique<FullBoard>(m_rootstate.board);
             if (jap_endboard->remove_dead_stones(chn_endstate->board)) {
-#ifndef NDEBUG
+// #ifndef NDEBUG
                 myprintf("Removal of dead stones completed.\n");
                 jap_endboard->display_board();
-#endif
+// #endif
                 select_dame_sequence(jap_endboard.get());
                 bestmove = m_bestmove;
-#ifndef NDEBUG
+// #ifndef NDEBUG
                 myprintf("Chosen move is %s.\n",
                          jap_endboard->move_to_text(bestmove).c_str());
-#endif
+// #endif
             } else {
                 myprintf ("Removal didn't work!\n");
             }
@@ -1100,10 +1129,12 @@ int UCTSearch::think(int color, passflag_t passflag) {
         if(chosen_child) {
             const auto alpkt = chosen_child->get_net_alpkt();
             const auto beta = chosen_child->get_net_beta();
+            const auto crazy_rate = chosen_child->get_crazy_rate();
             const auto x_lambda = chosen_child->get_eval_bonus();
             const auto x_mu = chosen_child->get_eval_base();
             const StateEval ev(chosen_child->get_visits(),
-                               alpkt, beta, sigmoid(alpkt, beta, 0.0f).first,
+                               alpkt, beta, crazy_rate,
+                               sigmoid(alpkt, beta, 0.0f).first,
                                Utils::sigmoid_interval_avg(alpkt, beta,
                                                            x_mu, x_lambda),
                                x_lambda, x_mu,
@@ -1112,14 +1143,14 @@ int UCTSearch::think(int color, passflag_t passflag) {
                                chosen_child->get_alpkt_online_median());
             m_rootstate.set_eval(ev);
             
-#ifndef NDEBUG
-            myprintf("visits=%d, alpkt=%.2f, beta=%.3f, pi=%.3f, agent=%.3f, "
-                     "avg=%.3f, alpkt_med=%.3f, alpkt_online=%.3f, "
+// #ifndef NDEBUG
+            myprintf("visits=%d, alpkt=%.2f, beta=%.3f, crazy_rate=%.3f, pi=%.3f, "
+                     "agent=%.3f, avg=%.3f, alpkt_med=%.3f, alpkt_online=%.3f, "
                      "x_mu=%.1f, x_lambda=%.1f\n",
-                     ev.visits, ev.alpkt, ev.beta, ev.pi, ev.agent_eval,
+                     ev.visits, ev.alpkt, ev.beta, ev.crazy_rate, ev.pi, ev.agent_eval,
                      ev.agent_eval_avg, ev.alpkt_median, ev.alpkt_online_median,
                      ev.agent_x_mu, ev.agent_x_lambda);
-#endif
+// #endif
         }
     }
 

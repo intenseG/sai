@@ -333,11 +333,13 @@ float FastBoard::area_score(float komi) const {
 
 float FastBoard::territory_score(float komi) {
     const auto territory = compute_territory();
+#ifndef NDEBUG
     display_board();
     myprintf ("Scoring:\n"
               "black t: %d, white t: %d, black p: %d, white p: %d, komi: %.1f",
               territory.first, territory.second, get_prisoners(BLACK),
               get_prisoners(WHITE), komi);
+#endif
     return territory.first - territory.second - komi
         + get_prisoners(BLACK) - get_prisoners(WHITE);
 }

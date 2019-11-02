@@ -333,7 +333,7 @@ void Training::dump_training(int winner_color,
         out << " " << it->uct_stats.alpkt_online_median
             << " " << it->uct_stats.beta_median
             << " " << it->uct_stats.azwinrate_avg
-            << " " << it->uct_stats.crazy_rate
+            // << " " << it->uct_stats.crazy_rate
             << std::endl;
         training_str.append(out.str());
     }

@@ -240,9 +240,9 @@ float Utils::sigmoid_interval_avg(float alpkt, float beta, float s, float t) {
     const auto aa = log_sigmoid(a*beta) / h;
     const auto bb = log_sigmoid(b*beta) / h;
 
-    //    myprintf("integral: alpkt=%f, beta=%f, s=%f, t=%f\n"
-    //       "h=%f, a=%f, b=%f, main_term=%f, aa=%f, bb=%f\n",
-    //       alpkt, beta, s, t, h, a, b, main_term, aa, bb);
+    // myprintf("integral: alpkt=%f, beta=%f, s=%f, t=%f\n"
+    //          "h=%f, a=%f, b=%f, main_term=%f, aa=%f, bb=%f\n",
+    //           alpkt, beta, s, t, h, a, b, main_term, aa, bb);
     return main_term - bb + aa;
 }
 
@@ -304,13 +304,16 @@ double Utils::calc_crazy_rate(int prisoners, double score) {
     // crazy_rate: Adjusted value.
     // result_num: 1 if win, 0 if draw, -1 otherwise.
     // crazy_ratio: win/loss weights.
-    if (score > 0.0001) {
-        return (prisoners * 3.0 + score * 1.2) * 0.007 + 0.4;
-    } else if (score < 0.0001) {
-        return (prisoners * 3.0 + score * 1.2) * 0.007 - 0.4;
-    } else {
-        return prisoners * 3.0 * 0.007;
-    }
+
+    // if (score > 0.0001) {
+    //     return (prisoners * 3.0 + score * 1.2) * 0.007 + 0.4;
+    // } else if (score < 0.0001) {
+    //     return (prisoners * 3.0 + score * 1.2) * 0.007 - 0.4;
+    // } else {
+    //     return prisoners * 3.0 * 0.007;
+    // }
+
+    return (prisoners * 3.0 + score * 1.2) * 0.007 + 0.4;
 }
 
 const std::string Utils::leelaz_file(std::string file) {

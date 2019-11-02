@@ -495,6 +495,7 @@ void UCTNode::accumulate_eval(float eval) {
 
 UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
                                    int max_visits,
+                                   double crazy_rate,
                                    const std::vector<int> & move_list,
                                    bool nopass) {
     wait_expanded();
@@ -565,6 +566,20 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
         } else if (visits > 0) {
             winrate = child.get_eval(color);
         }
+
+        // // calculate opportunity and risk
+        // double opportunity = -1.0, risk = 2.0;
+
+        // for (const auto& child2 : child->m_children)
+        // {
+        //     if (child2->valid())
+        //     {
+        //         auto child_winrate = child2->get_eval(color);
+        //         if (child_winrate > opportunity) opportunity = child_winrate;
+        //         if (child_winrate < risk) risk = child_winrate;
+        //     }
+        // }
+
         auto psa = child.get_policy();
 
         if (nopass && child.get_move() == FastBoard::PASS) {
@@ -579,12 +594,13 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
 
         const auto denom = 1.0 + visits;
         const auto puct = cfg_puct * psa * (numerator / denom);
-        const auto crazy_rate = m_net_crazy_rate * 0.1;
 
-        auto value = winrate + puct + crazy_rate;
-        if (value < 0.0) {
-            value = 0.0;
-        }
+        // auto value = winrate * 0.5 + opportunity * 0.3 + risk * 0.2 + puct;
+        // auto value = (winrate + crazy_rate) * 0.5 + puct;
+        auto value = winrate + puct;
+        // if (value < 0.0) {
+        //     value = 0.0;
+        // }
         assert(value > std::numeric_limits<double>::lowest());
 
         if (value > best_value) {
@@ -601,7 +617,7 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
     assert(best != nullptr);
     if(best->get_visits() == 0) {
         best->inflate();
-        best->get()->set_values(m_net_eval, m_net_alpkt, m_net_beta, m_net_crazy_rate);
+        best->get()->set_values(m_net_eval, m_net_alpkt, m_net_beta, crazy_rate);
     }
 #ifndef NDEBUG
     best->get()->set_urgency(best_value, b_psa, b_q,
