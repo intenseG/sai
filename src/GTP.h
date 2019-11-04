@@ -80,6 +80,7 @@ private:
     size_t m_min_moves{0};
 };
 
+extern bool cfg_acceleration_endgame;
 extern bool cfg_gtp_mode;
 extern bool cfg_japanese_mode;
 extern bool cfg_use_nncache;
