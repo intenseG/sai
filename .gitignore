@@ -9,6 +9,7 @@ training/tf/venv
 training/tf/engine1
 training/tf/engine2
 leelaz-model*
+train.sgf
 *.orig
 leelaz_opencl_tuning
 sai_opencl_tuning

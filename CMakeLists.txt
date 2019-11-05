@@ -131,18 +131,18 @@ else()
 endif()
 
 # Google Test below
-file(GLOB tests_SRC "${SrcPath}/tests/*.cpp")
+#file(GLOB tests_SRC "${SrcPath}/tests/*.cpp")
 
-add_executable(tests ${tests_SRC} $<TARGET_OBJECTS:objs>)
-if(GccSpecificFlags)
-  target_compile_options(tests PRIVATE "-Wno-unused-variable")
-endif()
+#add_executable(tests ${tests_SRC} $<TARGET_OBJECTS:objs>)
+#if(GccSpecificFlags)
+#  target_compile_options(tests PRIVATE "-Wno-unused-variable")
+#endif()
 
-target_link_libraries(tests ${Boost_LIBRARIES})
-target_link_libraries(tests ${BLAS_LIBRARIES})
-target_link_libraries(tests ${OpenCL_LIBRARIES})
-target_link_libraries(tests ${ZLIB_LIBRARIES})
-target_link_libraries(tests gtest_main ${CMAKE_THREAD_LIBS_INIT})
+#target_link_libraries(tests ${Boost_LIBRARIES})
+#target_link_libraries(tests ${BLAS_LIBRARIES})
+#target_link_libraries(tests ${OpenCL_LIBRARIES})
+#target_link_libraries(tests ${ZLIB_LIBRARIES})
+#target_link_libraries(tests gtest_main ${CMAKE_THREAD_LIBS_INIT})
 
 include(GetGitRevisionDescription)
 git_describe(VERSION --tags)
