@@ -17,11 +17,11 @@
 #    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
 
 # 16 planes, 1 side to move, 1 x BOARD_SQUARES probs, 1 winner = 19 lines
-INPUT_PLANES = 12
-DATA_ITEM_LINES = 15
+INPUT_PLANES = 16
+DATA_ITEM_LINES = 19
 
 # Board size and number of squares in a board. Board size must be an odd number!
-BOARD_SIZE = 9
+BOARD_SIZE = 19
 BOARD_SQUARES = BOARD_SIZE * BOARD_SIZE
 
 # Sane values are from 4096 to 64 or so.
@@ -58,18 +58,18 @@ DOWN_SAMPLE = 5
 # Network structure -- common part
 
 RESIDUAL_FILTERS = 256
-RESIDUAL_BLOCKS = 12
+RESIDUAL_BLOCKS = 20
 POLICY_OUTPUTS = 2
 INPUT_STM = 0 # 1: both side to move and komi in input (18 input planes)
               # 0: only komi in input (17 input planes)
-WEIGHTS_FILE_VER = "209"  # 'advanced features' + 'komi policy'
+WEIGHTS_FILE_VER = "49"  # 'advanced features' + 'komi policy'
                          # bit 0,   1: LZ must be on
                          # bit 4,  16: advanced features (+2 planes)
                          # bit 5,  32: komi policy
                          # bit 6,  64: chain liberties features (+4 planes)
                          # bit 7, 128: chain size features (+4 planes)
 KOMI_POLICY_CHANS = 14 # only used for komi policy net format
-              
+
 # Network structure -- Sai value head
 # Value head type can be:
 SINGLE = 1 # (Leela Zero)
@@ -78,25 +78,25 @@ DOUBLE_Y = 3
 DOUBLE_T = 4 # last two types are equivalent, changing
 DOUBLE_I = 5 # only the order of weights in the file
 
-VALUE_HEAD_TYPE = DOUBLE_Y
-VAL_OUTPUTS = 5
+VALUE_HEAD_TYPE = SINGLE
+VAL_OUTPUTS = 1
 VBE_OUTPUTS = 1 # only for double W
-VAL_CHANS = 384
+VAL_CHANS = 256
 VBE_CHANS = 256 # only for double W and Y
 
 # Loss weights
 POLICY_LOSS_WT = 1.0
-MSE_LOSS_WT = 1.0
+MSE_LOSS_WT = 0.5
 REG_LOSS_WT = 1.0
 
 # Learning rate
-LEARN_RATE = 0.001
+LEARN_RATE = 0.005
 
 # Outputs new network after the specified number of training steps
-TRAINING_STEPS = 1000
+TRAINING_STEPS = 8000
 
 # Display intermediate output after the specified number of training steps
-INFO_STEPS = 100
+INFO_STEPS = 1000
 
 # Maximum number of training steps (0 continue forever)
-MAX_TRAINING_STEPS = 10000
+MAX_TRAINING_STEPS = 128000

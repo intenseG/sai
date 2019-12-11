@@ -203,7 +203,7 @@ bool Game::gameStart(const VersionTuple &min_version,
             QTextStream(stdout) << command << endl;
             if (!sendGtpCommand(command))
             {
-                QTextStream(stdout) << "GTP failed on: " << command << endl;
+                QTextStream(stdout) << "GTP failed on [1]: " << command << endl;
                 exit(EXIT_FAILURE);
             }
             m_isHandicap = true;
@@ -215,7 +215,7 @@ bool Game::gameStart(const VersionTuple &min_version,
         QTextStream(stdout) << command << endl;
         if (!sendGtpCommand(command))
         {
-            QTextStream(stdout) << "GTP failed on: " << command << endl;
+            QTextStream(stdout) << "GTP failed on [2]: " << command << endl;
             exit(EXIT_FAILURE);
         }
     }

@@ -8,6 +8,8 @@ training/tf/checkpoint
 training/tf/venv
 training/tf/engine1
 training/tf/engine2
+autogtp/*/
+datasets*.zip
 leelaz-model*
 train.sgf
 *.orig

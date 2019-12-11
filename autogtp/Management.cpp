@@ -410,7 +410,7 @@ Order Management::getWorkInternal(bool tuning) {
             << "Server requires client version " << required_version
             << " but we are version " << m_version << endl;
         QTextStream(stdout)
-            << "Check https://github.com/gcp/leela-zero for updates." << endl;
+            << "Check https://github.com/intenseG/sai/releases for updates." << endl;
         exit(EXIT_FAILURE);
     }
     //passing leela version
@@ -819,6 +819,7 @@ void Management::uploadResult(const QMap<QString,QString> &r, const QMap<QString
     prog_cmdline.append("-F options_hash="+ l["optHash"]);
     prog_cmdline.append("-F random_seed="+ l["rndSeed"]);
     prog_cmdline.append("-F sgf=@"+ r["file"] + ".sgf.gz");
+    prog_cmdline.append("-F username="+ m_username);
     prog_cmdline.append(m_serverUrl+"submit-match");
 
     bool sent = false;
@@ -873,6 +874,7 @@ void Management::uploadData(const QMap<QString,QString> &r, const QMap<QString,Q
     prog_cmdline.append("-F random_seed="+ l["rndSeed"]);
     prog_cmdline.append("-F sgf=@" + r["file"] + ".sgf.gz");
     prog_cmdline.append("-F trainingdata=@" + r["file"] + ".txt.0.gz");
+    prog_cmdline.append("-F username="+ m_username);
     prog_cmdline.append(m_serverUrl+"submit");
 
     QStringList prog_other_args;

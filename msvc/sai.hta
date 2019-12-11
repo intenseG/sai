@@ -15,8 +15,6 @@
                     if (!oFile.AtEndOfStream)
                         document.getElementById("username").value = oFile.ReadLine();
                     if (!oFile.AtEndOfStream)
-                        document.getElementById("password").value = oFile.ReadLine();
-                    if (!oFile.AtEndOfStream)
                         document.getElementById("params").value = oFile.ReadLine();
                     oFile.Close();
                 }
@@ -25,18 +23,16 @@
 
         sai = function () {
             username = document.form.username.value;
-            password = document.form.password.value;
             params = document.form.params.value;
 
             oFSO = new ActiveXObject("Scripting.FileSystemObject");
             oFile = oFSO.CreateTextFile("sai.cfg", true);
             oFile.WriteLine(username);
-            oFile.WriteLine(password);
             oFile.WriteLine(params);
             oFile.Close();
 
             objShell = new ActiveXObject("WScript.Shell");
-            cmdline = "autogtp --url http://igostadium.net/ --username " + username + " --password " + password + " " + params;
+            cmdline = "autogtp --url http://igostadium.net:52516/ --username " + username + " " + params;
             objShell.Run(cmdline);
             window.close();
             return true;
@@ -52,7 +48,6 @@
     <h1>Insert Parameters for Launching SAI</h1>
     <form name="form">
         <p>Computername:&nbsp;<input type="text" name="username" id="username"/></p>
-        <p>Password:&nbsp;<input type="password" name="password" id="password" /></p>
         <p>Optional Parameters:&nbsp;<input type="text" name="params" id="params" /></p>
 
         <p><input type="button" value="Launch SAI" onclick="sai()" /></p>
