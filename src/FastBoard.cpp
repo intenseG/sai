@@ -41,6 +41,7 @@
 
 #include "Network.h"
 #include "Utils.h"
+#include "Ladder.h"
 #include "config.h"
 
 using namespace Utils;
@@ -96,6 +97,13 @@ FastBoard::vertex_t FastBoard::get_state(int vertex) const {
     return m_state[vertex];
 }
 
+unsigned short FastBoard::get_liberties(int vertex) const {
+    assert(vertex >= 0 && vertex < NUM_VERTICES);
+    assert(vertex >= 0 && vertex < m_numvertices);
+
+    return m_libs[m_parent[vertex]];
+}
+
 void FastBoard::set_state(int vertex, FastBoard::vertex_t content) {
     assert(vertex >= 0 && vertex < NUM_VERTICES);
     assert(vertex >= 0 && vertex < m_numvertices);
@@ -110,6 +118,16 @@ FastBoard::vertex_t FastBoard::get_state(int x, int y) const {
 
 void FastBoard::set_state(int x, int y, FastBoard::vertex_t content) {
     set_state(get_vertex(x, y), content);
+}
+
+int FastBoard::get_state_neighbor(int vertex, int dir) const {
+    assert(0 <= dir && dir <= 3);
+
+    return vertex + m_dirs[dir];
+}
+
+unsigned short FastBoard::get_liberties(int x, int y) const {
+    return get_liberties(get_vertex(x, y));
 }
 
 void FastBoard::reset_board(int size) {
@@ -606,6 +624,13 @@ int FastBoard::get_to_move() const {
     return m_tomove;
 }
 
+int FastBoard::get_not_to_move() const {
+    if (black_to_move()) {
+        return WHITE;
+    }
+    return BLACK;
+}
+
 bool FastBoard::black_to_move() const {
     return m_tomove == BLACK;
 }
@@ -656,6 +681,22 @@ std::string FastBoard::get_stone_list() const {
 
     return result;
 }
+
+// std::vector<int> FastBoard::get_stone_vertex_list() const {
+//     std::vector<int> result;
+
+//     for (int i = 0; i < m_boardsize; i++) {
+//         for (int j = 0; j < m_boardsize; j++) {
+//             int vertex = get_vertex(i, j);
+
+//             if (get_state(vertex) != EMPTY) {
+//                 result.emplace_back(vertex);
+//             }
+//         }
+//     }
+
+//     return result;
+// }
 
 int FastBoard::get_sym_move(const int vertex,
                             const int symmetry) const {

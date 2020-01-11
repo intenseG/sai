@@ -44,6 +44,7 @@
 #include <tuple>
 #include <algorithm>
 #include <iostream>
+// #include <random>
 
 #include "FastBoard.h"
 #include "FastState.h"
@@ -455,32 +456,32 @@ void UCTSearch::dump_stats(FastState & state, UCTNode & parent) {
                       node->get_alpkt_online_median(),
                       pv.c_str());
         }
-#ifdef NDEBUG
-        myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
-                 move.c_str(),
-                 node->get_visits(),
-                 node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
-                 std::max(0.0f, node->get_eval_lcb(color) * 100.0f),
-                 node->get_policy() * 100.0f,
-                 node->get_crazy_rate() * 100.0f,
-                 node->get_alpkt_online_median(),
-                 pv.c_str());
-#else
-        myprintf("%4s -> %7d (U: %5.2f%%, q: %5.2f%%, num: %5.2f, den: %4d) "
-                 "(V: %5.2f%%) (LCB: %8.5f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
-                 move.c_str(),
-                 node->get_visits(),
-                 node->get_urgency()[0] * 100.0f,
-                 node->get_urgency()[2] * 100.0f,
-                 node->get_urgency()[4],
-                 int(node->get_urgency()[3]),
-                 node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
-                 node->get_eval_lcb(color) * 100.0f,
-                 node->get_policy() * 100.0f,
-                 node->get_crazy_rate() * 100.0f,
-                 node->get_alpkt_online_median(),
-                 pv.c_str());
-#endif
+// #ifdef NDEBUG
+//         myprintf("%4s -> %7d (V: %5.2f%%) (LCB: %5.2f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
+//                  move.c_str(),
+//                  node->get_visits(),
+//                  node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
+//                  std::max(0.0f, node->get_eval_lcb(color) * 100.0f),
+//                  node->get_policy() * 100.0f,
+//                  node->get_crazy_rate() * 100.0f,
+//                  node->get_alpkt_online_median(),
+//                  pv.c_str());
+// #else
+//         myprintf("%4s -> %7d (U: %5.2f%%, q: %5.2f%%, num: %5.2f, den: %4d) "
+//                  "(V: %5.2f%%) (LCB: %8.5f%%) (N: %5.2f%%) (C: %5.2f%%) (A: %4.1f) PV: %s\n",
+//                  move.c_str(),
+//                  node->get_visits(),
+//                  node->get_urgency()[0] * 100.0f,
+//                  node->get_urgency()[2] * 100.0f,
+//                  node->get_urgency()[4],
+//                  int(node->get_urgency()[3]),
+//                  node->get_visits() ? node->get_raw_eval(color)*100.0f : 0.0f,
+//                  node->get_eval_lcb(color) * 100.0f,
+//                  node->get_policy() * 100.0f,
+//                  node->get_crazy_rate() * 100.0f,
+//                  node->get_alpkt_online_median(),
+//                  pv.c_str());
+// #endif
     }
     tree_stats(parent);
 }
@@ -1020,6 +1021,9 @@ int UCTSearch::think(int color, passflag_t passflag) {
 
     myprintf("Thinking at most %.1f seconds...\n", time_for_move/100.0f);
 
+    myprintf("start not play ladder.\n");
+    { extern size_t s_root_movenum; s_root_movenum = m_rootstate.get_movenum(); }
+
     // create a sorted list of legal moves (make sure we
     // play something legal and decent even in time trouble)
     m_root->prepare_root_node(m_network, color, m_nodes, m_rootstate);
@@ -1203,7 +1207,45 @@ int UCTSearch::think(int color, passflag_t passflag) {
 #endif
 #endif
 
-    //    int bestmove = get_best_move(passflag);
+    // int bestmove = get_best_move(passflag);
+
+    if (int(m_rootstate.get_movenum()) < 4) {
+        //BoardSize -> 21*21
+        std::vector<int> opening_values{332, 122, 362, 68, 78, 108, 318, 372};
+        std::vector<int> ignore_indexes{3, 1, 2, 0, 1, 0, 2, 3};
+        std::vector<int> ignore_values[]{{66, 67, 68, 87, 88, 89, 108, 109, 110},
+                                         {78, 79, 80, 99, 100, 101, 120, 121, 122},
+                                         {318, 319, 320, 339, 340, 341, 360, 361, 362},
+                                         {330, 331, 332, 351, 352, 353, 372, 373, 374}};
+        std::vector<int> legal_vertex;
+        for (auto i = 0; i < opening_values.size(); i++) {
+            if (m_rootstate.is_move_legal(color, opening_values[i])) {
+                int idx = ignore_indexes[i];
+                bool ignore = false;
+                for (auto j = 0; j < ignore_values[idx].size(); j++)
+                {
+                    if (m_rootstate.board.get_state(ignore_values[idx][j]) != 2) {
+                        ignore = true;
+                        break;
+                    }
+                }
+
+                if (!ignore) {
+                    legal_vertex.emplace_back(opening_values[i]);
+                }
+            }
+        }
+
+        // myprintf("Best Move: %d", legal_vertex[0]);
+        bestmove = legal_vertex[0];
+
+        // if (legal_vertex.size() > 0) {
+        //     std::random_device rnd;
+        //     std::mt19937 mt(rnd());
+        //     std::uniform_int_distribution<> rand_num(0, legal_vertex.size());
+        //     bestmove = legal_vertex[rand_num(mt)];
+        // }
+    }
 
     // Save the explanation.
     m_think_output =
@@ -1441,6 +1483,15 @@ void UCTSearch::select_dame_sequence(FullBoard *board) {
     return;
 }
 
+// bool UCTSearch::vector_finder(std::vector<int> vec, int number) {
+//   auto itr = std::find(vec.begin(), vec.end(), number);
+//   size_t index = std::distance(vec.begin(), itr);
+//   if (index != vec.size()) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// }
 
 // Brief output from last think() call.
 std::string UCTSearch::explain_last_think() const {

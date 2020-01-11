@@ -46,6 +46,7 @@
 #include "FullBoard.h"
 #include "KoState.h"
 #include "UCTSearch.h"
+#include "Ladder.h"
 
 StateEval GameState::get_eval() const {
     return KoState::get_eval();
@@ -158,6 +159,10 @@ void GameState::display_state() {
     FastState::display_state();
 
     m_timecontrol.display_times();
+}
+
+void GameState::display_ladders() {
+    Ladder::display_ladders(*this);
 }
 
 int GameState::who_resigned() const {

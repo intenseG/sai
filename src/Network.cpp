@@ -72,6 +72,7 @@
 #include "ThreadPool.h"
 #include "Timing.h"
 #include "Utils.h"
+#include "Ladder.h"
 
 namespace x3 = boost::spirit::x3;
 using namespace Utils;
@@ -1148,6 +1149,95 @@ Network::Netresult Network::get_output_internal(
     const auto val_output =
         innerproduct<false>(val_channels, m_ip2_val_w, m_ip2_val_b);
 
+/*
+	std::vector<float> captures(NUM_INTERSECTIONS);
+	std::vector<float> escapes(NUM_INTERSECTIONS);
+	auto captures_it = begin(captures);
+	auto escapes_it = begin(escapes);
+//  fill_ladder_planes(state, captures_it, escapes_it, symmetry);
+    fill_ladder_planes(state, captures_it, escapes_it, 0);
+*/
+#if 0
+    int del_next_sp = 0;
+    for (auto i=0; i < NUM_INTERSECTIONS; i++) {
+        const auto x = i % BOARD_SIZE;
+        const auto y = i / BOARD_SIZE;
+        const auto vertex = state->board.get_vertex(x, y);
+        auto k = state->board.get_state(vertex);
+        char str[] = "XO.";
+        if ( state->get_last_move() == vertex ) {
+ 	    	myprintf("(%c)",str[k]);
+			del_next_sp = 1;
+		} else {
+			if ( del_next_sp == 0 ) myprintf(" ");
+        	myprintf("%c",str[k]);
+        	del_next_sp = 0;
+		}
+        if ( ((i+1) % BOARD_SIZE) == 0 ) {
+			myprintf(" ");
+    		for (auto i=0; i < BOARD_SIZE; i++) {
+				const auto vertex = state->board.get_vertex(x - (BOARD_SIZE-1)+i, y);
+		        int k;
+		        if ( state->board.get_state(vertex) == FastBoard::EMPTY ) k = 0;
+		        else k = state->board.get_liberties(vertex);
+		        myprintf(" %d",k);
+			}
+
+			if ( (i+1) == BOARD_SIZE ) myprintf(" moves=%d",state->get_movenum());
+			myprintf("\n");
+		}
+    }
+//	Ladder::display_parent(*state);
+#endif
+
+/*
+    myprintf("liberties\n");
+    for (auto i=0; i < NUM_INTERSECTIONS; i++) {
+        const auto x = i % BOARD_SIZE;
+        const auto y = i / BOARD_SIZE;
+        const auto vertex = state->board.get_vertex(x, y);
+        int k;
+        if ( state->board.get_state(vertex) == FastBoard::EMPTY ) k = 0;
+        else k = state->board.get_liberties(vertex);
+        myprintf(" %d",k);
+        if ( ((i+1) % BOARD_SIZE) == 0 ) myprintf("\n");
+    }
+*/
+/*
+    myprintf("is_eye\n");
+    for (auto i=0; i < NUM_INTERSECTIONS; i++) {
+        const auto x = i % BOARD_SIZE;
+        const auto y = i / BOARD_SIZE;
+        const auto vertex = state->board.get_vertex(x, y);
+        bool b = state->board.is_eye(FastBoard::BLACK, vertex);
+        bool w = state->board.is_eye(FastBoard::WHITE, vertex);
+        myprintf("%d%d ",b,w);
+        if ( ((i+1) % BOARD_SIZE) == 0 ) myprintf("\n");
+    }
+*/
+//	state->display_state();
+//  auto &board = state->get_past_board(0);
+//  board.display_board();
+/*
+    const auto &board = state->board;
+    const auto capture_player = board.get_to_move();
+    myprintf("sym=%d,to_move=%d\n",symmetry,capture_player);
+    if ( 1 ) for (auto idx = 0; idx < NUM_INTERSECTIONS; idx++) {
+        myprintf("%.0f%.0f ",captures[idx],escapes[idx]);
+        if ( ((idx+1) % BOARD_SIZE) == 0 ) myprintf("\n");
+    }
+//  Ladder::display_ladders();
+*/
+
+	std::vector<int> ladder_map(NUM_INTERSECTIONS);
+//  set_ladder_map(state, begin(ladder_map), symmetry);
+    set_ladder_map(state, begin(ladder_map), 0);
+//  myprintf("ladder_map. m_komove=%d\n",state->m_komove);
+    if ( 0 ) for (auto idx = 0; idx < NUM_INTERSECTIONS; idx++) {
+        myprintf("%2d",ladder_map[idx]);
+        if ( ((idx+1) % BOARD_SIZE) == 0 ) myprintf("\n");
+    }
+
     Netresult result;
 
     if (m_value_head_type==DOUBLE_V) {
@@ -1195,6 +1285,33 @@ Network::Netresult Network::get_output_internal(
     for (auto idx = size_t{0}; idx < NUM_INTERSECTIONS; idx++) {
         const auto sym_idx = symmetry_nn_idx_table[symmetry][idx];
         result.policy[sym_idx] = outputs[idx];
+        int ladder = ladder_map[sym_idx];
+		if ( 1 && ladder ) {
+			float r = result.policy[sym_idx];
+			float mul = 1.0f / 1000000.0f;
+//			if ( state->m_komove != FastBoard::NO_VERTEX ) mul = 1.0;	// ladder escape maybe ok for ko threat.
+			if ( ladder == Ladder::CANNOT_CAPTURE ) mul = 1.0f / 1.0f;	// 1.0f / 2.0f
+			if ( ladder == Ladder::CAPTURE        ) mul = 1.0;	// 1.5
+			
+			r *= mul;
+        	if ( 0 && mul!=1.0 ) {
+				extern size_t s_root_movenum;
+				auto movenum = state->get_movenum();
+//				myprintf("s_root_movenum=%d\n",s_root_movenum);
+		        const auto x = idx % BOARD_SIZE;
+		        const auto y = idx / BOARD_SIZE;
+		        const auto vertex = state->board.get_vertex(y, x);
+				if ( movenum == s_root_movenum && result.policy[sym_idx] > 0.10 ) {
+					myprintf("[%d:%3s:m=%3d,ko=%3d] %.5f -> %.5f\n",ladder,state->board.move_to_text(vertex).c_str(),movenum ,state->m_komove, result.policy[sym_idx],r);
+					FILE *fp = fopen("lz_out.txt","a");
+					if ( fp ) {
+						fprintf(fp,"[%d:%3s:m=%3zu,ko=%3d] %.5f -> %.5f\n",ladder,state->board.move_to_text(vertex).c_str(),movenum ,state->m_komove, result.policy[sym_idx],r);
+						fclose(fp);
+					}
+				}
+			}
+			result.policy[sym_idx] = r;
+    	}
     }
 
     result.policy_pass = outputs[NUM_INTERSECTIONS];
@@ -1392,6 +1509,38 @@ void Network::fill_input_plane_chainsizefeat(std::shared_ptr<const KoState> cons
                 (state->board.chain_stones(vtx) >= 2 * plane + 2);
         }
     }
+}
+
+void Network::fill_ladder_planes(const GameState* const state,
+                                 std::vector<float>::iterator captures,
+                                 std::vector<float>::iterator escapes,
+                                 const int symmetry) {
+    for (auto idx = 0; idx < NUM_INTERSECTIONS; idx++) {
+        const auto sym_idx = symmetry_nn_idx_table[symmetry][idx];
+        const auto x = sym_idx % BOARD_SIZE;
+        const auto y = sym_idx / BOARD_SIZE;
+        const auto vtx = state->board.get_vertex(x, y);
+		int searched_depth = 0;
+        if (Ladder::ladder_capture(*state, vtx, &searched_depth)) {
+            captures[idx] = searched_depth;
+        }
+		searched_depth = 0;
+        if (Ladder::ladder_escape(*state, vtx, &searched_depth)) {
+            escapes[idx] = searched_depth;
+        }
+    }
+}
+
+void Network::set_ladder_map(const GameState* const state,
+                                 std::vector<int>::iterator ladder_map,
+                                 const int symmetry) {
+    for (auto idx = 0; idx < NUM_INTERSECTIONS; idx++) {
+        const auto sym_idx = symmetry_nn_idx_table[symmetry][idx];
+        const auto x = sym_idx % BOARD_SIZE;
+        const auto y = sym_idx / BOARD_SIZE;
+        const auto vtx = state->board.get_vertex(x, y);
+        ladder_map[idx] = Ladder::ladder_maybe(*state, vtx);
+	}
 }
 
 std::vector<float> Network::gather_features(const GameState* const state,

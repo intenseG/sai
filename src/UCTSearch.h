@@ -151,6 +151,7 @@ private:
                                bool prune = true);
     bool stop_thinking(int elapsed_centis = 0, int time_for_move = 0) const;
     int get_best_move(passflag_t passflag);
+    // bool vector_finder(std::vector<int> vec, int number);
     void update_root(bool is_evaluating = false);
     bool advance_to_new_rootstate();
     void select_playable_dame(FullBoard *board);

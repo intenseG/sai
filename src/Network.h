@@ -197,6 +197,13 @@ class Network
     static void fill_input_plane_chainsizefeat(std::shared_ptr<const KoState> const state,
                                                std::vector<float>::iterator chainsize,
                                                const int symmetry);
+    static void fill_ladder_planes(const GameState* const state,
+                                 std::vector<float>::iterator captures,
+                                 std::vector<float>::iterator escapes,
+                                 const int symmetry);
+    static void set_ladder_map(const GameState* const state,
+                                 std::vector<int>::iterator ladder_map,
+                                 const int symmetry);
 
     bool probe_cache(const GameState *const state, Network::Netresult &result);
     std::unique_ptr<ForwardPipe> &&init_net(int channels,

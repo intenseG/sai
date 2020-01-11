@@ -40,6 +40,7 @@
 
 class FastBoard {
     friend class FastState;
+    friend class Ladder;
 public:
     /*
         neighbor counts are up to 4, so 3 bits is ok,
@@ -101,6 +102,7 @@ public:
     bool black_to_move() const;
     bool white_to_move() const;
     int get_to_move() const;
+    int get_not_to_move() const;
     void set_to_move(int color);
 
     std::string move_to_text(int move) const;
@@ -108,12 +110,17 @@ public:
     std::string move_to_text_sgf(int move) const;
     std::string get_stone_list() const;
     std::string get_string(int vertex) const;
+    // std::vector<int> get_stone_vertex_list() const;
 
     void reset_board(int size);
     void display_board(int lastmove = -1) const;
 
     static bool starpoint(int size, int point);
     static bool starpoint(int size, int x, int y);
+
+    int get_state_neighbor(int vertex, int dir) const;
+    unsigned short get_liberties(int x, int y) const;
+    unsigned short get_liberties(int vertex) const;
 
     unsigned short int liberties_to_capture(int vtx) const;
     unsigned short int chain_liberties(int vtx) const;

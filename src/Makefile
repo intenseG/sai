@@ -51,7 +51,8 @@ sources = Network.cpp FullBoard.cpp KoState.cpp Training.cpp \
 	  SGFParser.cpp Timing.cpp Utils.cpp FastBoard.cpp SHA256.cpp \
 	  SGFTree.cpp Zobrist.cpp FastState.cpp GTP.cpp Random.cpp \
 	  SMP.cpp UCTNode.cpp UCTNodePointer.cpp UCTNodeRoot.cpp \
-	  OpenCL.cpp OpenCLScheduler.cpp NNCache.cpp Tuner.cpp CPUPipe.cpp
+	  OpenCL.cpp OpenCLScheduler.cpp NNCache.cpp Tuner.cpp CPUPipe.cpp \
+	  Ladder.cpp
 
 objects = $(sources:.cpp=.o)
 deps = $(sources:%.cpp=%.d)
