@@ -112,17 +112,17 @@ list(REMOVE_ITEM leelaz_SRC ${leelaz_MAIN})
 # Reuse for leelaz and gtest
 add_library(objs OBJECT ${leelaz_SRC})
 
-add_executable(sai $<TARGET_OBJECTS:objs> ${leelaz_MAIN})
+add_executable(leelaz $<TARGET_OBJECTS:objs> ${leelaz_MAIN})
 
 # For compatibility with Leela Zero scripts
-add_custom_target(leelaz DEPENDS sai)
+#add_custom_target(sai DEPENDS leelaz)
 
-target_link_libraries(sai ${Boost_LIBRARIES})
-target_link_libraries(sai ${BLAS_LIBRARIES})
-target_link_libraries(sai ${OpenCL_LIBRARIES})
-target_link_libraries(sai ${ZLIB_LIBRARIES})
-target_link_libraries(sai ${CMAKE_THREAD_LIBS_INIT})
-install(TARGETS sai DESTINATION ${CMAKE_INSTALL_BINDIR})
+target_link_libraries(leelaz ${Boost_LIBRARIES})
+target_link_libraries(leelaz ${BLAS_LIBRARIES})
+target_link_libraries(leelaz ${OpenCL_LIBRARIES})
+target_link_libraries(leelaz ${ZLIB_LIBRARIES})
+target_link_libraries(leelaz ${CMAKE_THREAD_LIBS_INIT})
+install(TARGETS leelaz DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(Qt5Core_FOUND)
     if(NOT Qt5Core_VERSION VERSION_LESS "5.3.0")
@@ -137,18 +137,18 @@ else()
 endif()
 
 # Google Test below
-file(GLOB tests_SRC "${SrcPath}/tests/*.cpp")
+#file(GLOB tests_SRC "${SrcPath}/tests/*.cpp")
 
-add_executable(tests ${tests_SRC} $<TARGET_OBJECTS:objs>)
-if(GccSpecificFlags)
-  target_compile_options(tests PRIVATE "-Wno-unused-variable")
-endif()
+#add_executable(tests ${tests_SRC} $<TARGET_OBJECTS:objs>)
+#if(GccSpecificFlags)
+#  target_compile_options(tests PRIVATE "-Wno-unused-variable")
+#endif()
 
-target_link_libraries(tests ${Boost_LIBRARIES})
-target_link_libraries(tests ${BLAS_LIBRARIES})
-target_link_libraries(tests ${OpenCL_LIBRARIES})
-target_link_libraries(tests ${ZLIB_LIBRARIES})
-target_link_libraries(tests gtest_main ${CMAKE_THREAD_LIBS_INIT})
+#target_link_libraries(tests ${Boost_LIBRARIES})
+#target_link_libraries(tests ${BLAS_LIBRARIES})
+#target_link_libraries(tests ${OpenCL_LIBRARIES})
+#target_link_libraries(tests ${ZLIB_LIBRARIES})
+#target_link_libraries(tests gtest_main ${CMAKE_THREAD_LIBS_INIT})
 
 include(GetGitRevisionDescription)
 git_describe(VERSION --tags)
@@ -156,7 +156,7 @@ string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" MAJOR_VERSION "${VERSION}")
 string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" MINOR_VERSION "${VERSION}")
 
 SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_NAME "sai")
+SET(CPACK_DEBIAN_PACKAGE_NAME "leelaz")
 SET(CPACK_DEBIAN_PACKAGE_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "The SAI Team https://github.com/sai-dev/sai")
