@@ -1,19 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
+    Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -26,6 +27,7 @@
     this Program grant you additional permission to convey the resulting
     work.
 */
+
 
 #include "config.h"
 #include "Utils.h"
@@ -240,9 +242,9 @@ float Utils::sigmoid_interval_avg(float alpkt, float beta, float s, float t) {
     const auto aa = log_sigmoid(a*beta) / h;
     const auto bb = log_sigmoid(b*beta) / h;
 
-    // myprintf("integral: alpkt=%f, beta=%f, s=%f, t=%f\n"
-    //          "h=%f, a=%f, b=%f, main_term=%f, aa=%f, bb=%f\n",
-    //           alpkt, beta, s, t, h, a, b, main_term, aa, bb);
+    //    myprintf("integral: alpkt=%f, beta=%f, s=%f, t=%f\n"
+    //       "h=%f, a=%f, b=%f, main_term=%f, aa=%f, bb=%f\n",
+    //       alpkt, beta, s, t, h, a, b, main_term, aa, bb);
     return main_term - bb + aa;
 }
 
@@ -291,31 +293,6 @@ float Utils::winner(float board_score) {
     return 0.5f;
 }
 
-// Crazy Rate V1
-double Utils::calc_crazy_rate(int prisoners, double score) {
-    // --- Crazy rate evaluation formula ---
-    // (prisoners * crazy_factor + score * score_factor) * crazy_rate + result_num * crazy_ratio
-
-    // --- Variable description ---
-    // prisoners: Sum of prisoners and dead stones.
-    // score: Black viewpoint score difference.
-    // crazy_factor: Prisoners weights.
-    // score_factor: Score weights.
-    // crazy_rate: Adjusted value.
-    // result_num: 1 if win, 0 if draw, -1 otherwise.
-    // crazy_ratio: win/loss weights.
-
-    // if (score > 0.0001) {
-    //     return (prisoners * 3.0 + score * 1.2) * 0.007 + 0.4;
-    // } else if (score < 0.0001) {
-    //     return (prisoners * 3.0 + score * 1.2) * 0.007 - 0.4;
-    // } else {
-    //     return prisoners * 3.0 * 0.007;
-    // }
-
-    return (prisoners * 3.0 + score * 1.2) * 0.007 + 0.4;
-}
-
 const std::string Utils::leelaz_file(std::string file) {
 #if defined(_WIN32) || defined(__ANDROID__)
     boost::filesystem::path dir(boost::filesystem::current_path());
@@ -330,7 +307,7 @@ const std::string Utils::leelaz_file(std::string file) {
         homedir = pwd->pw_dir;
     }
     boost::filesystem::path dir(homedir);
-    dir /= ".local/share/leela-zero";
+    dir /= ".local/share/sai";
 #endif
     boost::filesystem::create_directories(dir);
     dir /= file;

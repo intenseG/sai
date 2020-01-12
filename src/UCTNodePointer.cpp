@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2018-2019 Gian-Carlo Pascutto and contributors
-    Copyright (C) 2018-2019 SAI Team
+    Copyright (C) 2018 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -79,7 +79,7 @@ UCTNodePointer::UCTNodePointer(std::int16_t vertex, float policy) {
     auto i_vertex = static_cast<std::uint16_t>(vertex);
     std::memcpy(&i_policy, &policy, sizeof(i_policy));
 
-    m_data =  (static_cast<std::uint64_t>(i_policy)  << 32)
+    m_data =  (static_cast<std::uint64_t>(i_policy) << 32)
             | (static_cast<std::uint64_t>(i_vertex) << 16);
     increment_tree_size(sizeof(UCTNodePointer));
 }
@@ -107,8 +107,9 @@ void UCTNodePointer::inflate() const {
         if (is_inflated(v)) return;
 
         auto v2 = reinterpret_cast<std::uint64_t>(
-            new UCTNode(read_vertex(v), read_policy(v))
-        ) | POINTER;
+            new UCTNode(read_vertex(v), read_policy(v)));
+        assert((v2 & 3ULL) == 0);
+        v2 |= POINTER;
         bool success = m_data.compare_exchange_strong(v, v2);
         if (success) {
             increment_tree_size(sizeof(UCTNode));
@@ -133,6 +134,12 @@ int UCTNodePointer::get_visits() const {
     return 0;
 }
 
+int UCTNodePointer::get_denom() const {
+    auto v = m_data.load();
+    if (is_inflated(v)) return read_ptr(v)->get_denom();
+    return 1;
+}
+
 float UCTNodePointer::get_policy() const {
     auto v = m_data.load();
     if (is_inflated(v)) return read_ptr(v)->get_policy();
@@ -140,14 +147,9 @@ float UCTNodePointer::get_policy() const {
 }
 
 float UCTNodePointer::get_eval_lcb(int color) const {
-    assert(is_inflated());
     auto v = m_data.load();
+    assert(is_inflated(v));
     return read_ptr(v)->get_eval_lcb(color);
-}
-
-float UCTNodePointer::get_crazy_rate() const {
-    auto v = m_data.load();
-    return read_ptr(v)->get_crazy_rate();
 }
 
 bool UCTNodePointer::active() const {

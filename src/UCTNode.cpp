@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -176,7 +176,7 @@ bool UCTNode::create_children(Network & network,
     auto allow_pass = cfg_dumbpass;
 
     // Less than 20 available intersections in a 19x19 game.
-    if (nodelist.size() <= std::max(5, BOARD_SIZE)) {
+    if (int(nodelist.size()) <= std::max(5, BOARD_SIZE)) {
         allow_pass = true;
     }
 
@@ -272,6 +272,7 @@ void UCTNode::virtual_loss_undo() {
 
 void UCTNode::clear_visits() {
     m_visits = 0;
+    m_forced = 0;
     m_blackevals = 0;
     m_alpkt_median = 0;
 }
@@ -284,7 +285,7 @@ void UCTNode::clear_children_visits() {
     }
 }
 
-void UCTNode::update(float eval) {
+void UCTNode::update(float eval, bool forced) {
     // Cache values to avoid race conditions.
     auto old_eval = static_cast<float>(m_blackevals);
     auto old_visits = static_cast<int>(m_visits);
@@ -295,6 +296,9 @@ void UCTNode::update(float eval) {
     // Welford's online algorithm for calculating variance.
     auto delta = old_delta * new_delta;
     atomic_add(m_squared_eval_diff, delta);
+    if (forced) {
+        m_forced++;
+    }
 }
 
 void UCTNode::update_alpkt_median(float new_value) {
@@ -369,19 +373,14 @@ float UCTNode::get_net_alpkt() const {
     return m_net_alpkt;
 }
 
-float UCTNode::get_crazy_rate() const {
-    return m_net_crazy_rate;
-}
-
 float UCTNode::get_alpkt_online_median() const {
     return m_alpkt_median;
 }
 
-void UCTNode::set_values(float value, float alpkt, float beta, float crazy_rate) {
+void UCTNode::set_values(float value, float alpkt, float beta) {
     m_net_eval = value;
     m_net_alpkt = alpkt;
     m_net_beta = beta;
-    m_net_crazy_rate = crazy_rate;
 }
 
 void UCTNode::set_policy(float policy) {
@@ -390,11 +389,11 @@ void UCTNode::set_policy(float policy) {
 
 #ifdef USE_EVALCMD
 void UCTNode::set_progid(int id) {
-    assert(m_progid == -1 && id >= 0);
-    m_progid = id;
+    assert(id >= 0);
+    m_progid.push_back(id);
 }
 
-int UCTNode::get_progid() const {
+std::vector<int>& UCTNode::get_progid() {
     return m_progid;
 }
 #endif
@@ -407,7 +406,7 @@ bool UCTNode::low_visits_child(UCTNode* const child) const {
     // father  4-6  child up to 3 low
     // father  7-12 child up to 4 low
     // father 13-20 child up to 5 low
-    // father 14-30 child up to 6 low ...
+    // father 21-30 child up to 6 low ...
     // If the child visits are high, then the child node is surely
     // good and reliable, otherwise it may be a wrong move that is
     // going to get dropped from tree search.
@@ -420,6 +419,14 @@ float UCTNode::get_eval_variance(float default_var) const {
 
 int UCTNode::get_visits() const {
     return m_visits;
+}
+
+int UCTNode::get_denom() const {
+    if (cfg_laddercode) {
+        return 1 + m_visits - m_forced;
+    } else {
+        return 1 + m_visits;
+    }
 }
 
 #ifndef NDEBUG
@@ -495,7 +502,6 @@ void UCTNode::accumulate_eval(float eval) {
 
 UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
                                    int max_visits,
-                                   double crazy_rate,
                                    const std::vector<int> & move_list,
                                    bool nopass) {
     wait_expanded();
@@ -566,20 +572,6 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
         } else if (visits > 0) {
             winrate = child.get_eval(color);
         }
-
-        // // calculate opportunity and risk
-        // double opportunity = -1.0, risk = 2.0;
-
-        // for (const auto& child2 : child->m_children)
-        // {
-        //     if (child2->valid())
-        //     {
-        //         auto child_winrate = child2->get_eval(color);
-        //         if (child_winrate > opportunity) opportunity = child_winrate;
-        //         if (child_winrate < risk) risk = child_winrate;
-        //     }
-        // }
-
         auto psa = child.get_policy();
 
         if (nopass && child.get_move() == FastBoard::PASS) {
@@ -592,15 +584,10 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
             psa += 0.2;
         }
 
-        const auto denom = 1.0 + visits;
+        const auto denom = child.get_denom();
         const auto puct = cfg_puct * psa * (numerator / denom);
 
-        // auto value = winrate * 0.5 + opportunity * 0.3 + risk * 0.2 + puct;
-        // auto value = (winrate + crazy_rate) * 0.5 + puct;
         auto value = winrate + puct;
-        // if (value < 0.0) {
-        //     value = 0.0;
-        // }
         assert(value > std::numeric_limits<double>::lowest());
 
         if (value > best_value) {
@@ -617,7 +604,7 @@ UCTNode* UCTNode::uct_select_child(const GameState & currstate, bool is_root,
     assert(best != nullptr);
     if(best->get_visits() == 0) {
         best->inflate();
-        best->get()->set_values(m_net_eval, m_net_alpkt, m_net_beta, crazy_rate);
+        best->get()->set_values(m_net_eval, m_net_alpkt, m_net_beta);
     }
 #ifndef NDEBUG
     best->get()->set_urgency(best_value, b_psa, b_q,
@@ -655,13 +642,10 @@ public:
         }
 
         // Calculate the lower confidence bound for each node.
-        if ((a_visit > m_lcb_min_visits) && (b_visit > m_lcb_min_visits)) {
+        if ((a_visit > m_lcb_min_visits) && (b_visit > m_lcb_min_visits)
+            && cfg_uselcb) {
             auto a_lcb = a.get_eval_lcb(m_color);
             auto b_lcb = b.get_eval_lcb(m_color);
-            //auto a_crazy_rate = a.get_crazy_rate() * 0.1f;
-            //auto b_crazy_rate = b.get_crazy_rate() * 0.1f;
-            //a_lcb += a_crazy_rate;
-            //b_lcb += b_crazy_rate;
 
             // Sort on lower confidence bounds
             if (a_lcb != b_lcb) {
@@ -780,7 +764,7 @@ void UCTNode::get_subtree_alpkts(std::vector<float> & vector,
             const auto pass = (child.get_move() == FastBoard::PASS) ? 1 : 0;
             child->get_subtree_alpkts(vector, ++passes * pass,
                                       is_tromptaylor_scoring);
-            children_visits += child_visits;
+                       children_visits += child_visits;
         }
     }
 
@@ -788,7 +772,7 @@ void UCTNode::get_subtree_alpkts(std::vector<float> & vector,
     if (missing_nodes > 0 && is_tromptaylor_scoring) {
         // check: this seems to happen only on second pass node, where
         // get_net_alpkt() would return a meningless value
-        
+
         const std::vector<float> rep(missing_nodes, get_net_alpkt());
         vector.insert(vector.end(), std::begin(rep), std::end(rep));
     }
@@ -847,7 +831,6 @@ UCTStats UCTNode::get_uct_stats() const {
     stats.alpkt_online_median = m_alpkt_median;
     stats.beta_median = get_beta_median();
     stats.azwinrate_avg = get_azwinrate_avg();
-    stats.crazy_rate = m_net_crazy_rate;
     return stats;
 }
 

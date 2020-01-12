@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -53,22 +53,23 @@ public:
     bool valid() const { return m_valid;  }
     float eval() const { return m_value;  }
     float get_alpkt() const { return m_alpkt; }
-    float get_crazy_rate() const { return m_crazy_rate; }
     float eval_with_bonus(float bonus, float base) const;
-    static SearchResult from_eval(float value, float alpkt, float beta, float crazy_rate) {
-        return SearchResult(value, alpkt, beta, crazy_rate);
+    bool is_forced() const { return m_forced; }
+    void set_forced() { m_forced = true; }
+    static SearchResult from_eval(float value, float alpkt, float beta) {
+        return SearchResult(value, alpkt, beta);
     }
-    static SearchResult from_score(float board_score, float crazy_rate) {
-        return SearchResult(Utils::winner(board_score), board_score, 10.0f, crazy_rate);
+    static SearchResult from_score(float board_score) {
+        return SearchResult(Utils::winner(board_score), board_score, 10.0f);
     }
 private:
-    explicit SearchResult(float value, float alpkt, float beta, float crazy_rate)
-        : m_valid(true), m_value(value), m_alpkt(alpkt), m_beta(beta), m_crazy_rate(crazy_rate) {}
+    explicit SearchResult(float value, float alpkt, float beta)
+        : m_valid(true), m_value(value), m_alpkt(alpkt), m_beta(beta) {}
     bool m_valid{false};
     float m_value{0.5f};
     float m_alpkt{0.0f};
     float m_beta{1.0f};
-    float m_crazy_rate{1.0f};
+    bool m_forced{false};
 };
 
 namespace TimeManagement {
@@ -116,6 +117,10 @@ public:
     void reset();
     int think(int color, passflag_t passflag = NORMAL);
 #ifdef USE_EVALCMD
+    void set_firstmove(int move);
+    int get_firstmove(int id) const;
+    void set_firstmove_blackeval(float eval);
+    float get_firstmove_blackeval(int id) const;
     Network::Netresult dump_evals(int req_playouts, std::string & dump_str,
                                   std::string & sgf_str);
     void dump_evals_recursion(std::string & dump_str, UCTNode* const node,
@@ -134,8 +139,6 @@ public:
     std::string explain_last_think() const;
     SearchResult play_simulation(GameState& currstate, UCTNode* const node);
 
-    // if true, it won't issue passes unless there is no other move
-    void passlock(bool lock);
 private:
     float get_min_psa_ratio() const;
     void dump_stats(FastState& state, UCTNode& parent);
@@ -157,7 +160,6 @@ private:
     void select_dame_sequence(FullBoard *board);
     bool is_stopping (int move) const;
     bool is_better_move(int move1, int move2, float & estimated_score);
-    float get_bestmove_crazy_rate(int bestmove);
     void explore_move(int move);
     void explore_root_nopass();
     void fast_roll_out();
@@ -172,10 +174,25 @@ private:
     int m_maxplayouts;
     int m_maxvisits;
     std::string m_think_output;
-    bool m_acceleration_mode = false;
-    bool m_passlock = true;
 
+#ifdef USE_EVALCMD
     int m_nodecounter=0;
+    bool m_evaluating=false;
+    std::vector<int> m_1st_move;
+    std::vector<float> m_1st_move_blackeval;
+#endif
+#ifndef NDEBUG
+    struct sim_node_info {
+        std::string movestr = "na";
+        std::string leafstr = "na";
+        int visits = -1;
+        float score = 1000.0f;
+        float eval = -1.0f;
+        float avg = -1.0f;
+    };
+
+    std::vector<sim_node_info> m_info;
+#endif
 
     // Advanced search parameters
     bool m_chn_scoring = true;

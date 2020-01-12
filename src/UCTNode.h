@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -50,7 +50,6 @@ struct UCTStats {
     float alpkt_online_median;
     float beta_median;
     float azwinrate_avg;
-    float crazy_rate;
 };
 
 class UCTNode {
@@ -76,7 +75,6 @@ public:
     UCTNode& get_best_root_child(int color);
     UCTNode* uct_select_child(const GameState & currstate, bool is_root,
                               int max_visits,
-                              double crazy_rate,
                               const std::vector<int> & move_list,
                               bool nopass = false);
 
@@ -91,6 +89,7 @@ public:
     double get_blackevals() const;
     int get_move() const;
     int get_visits() const;
+    int get_denom() const;
     float get_policy() const;
     void set_policy(float policy);
     float get_eval_variance(float default_var = 0.0f) const;
@@ -107,13 +106,12 @@ public:
     float get_net_eval() const;
     float get_net_beta() const;
     float get_net_alpkt() const;
-    float get_crazy_rate() const;
     float get_alpkt_online_median() const;
-    void set_values(float value, float alpkt, float beta, float crazy_rate);
+    void set_values(float value, float alpkt, float beta);
     bool low_visits_child(UCTNode* const child) const;
 #ifdef USE_EVALCMD
     void set_progid(int id);
-    int get_progid() const;
+    std::vector<int>& get_progid();
 #endif
 #ifndef NDEBUG
     void set_urgency(float urgency, float psa, float q,
@@ -124,7 +122,7 @@ public:
     void virtual_loss_undo();
     void clear_visits();
     void clear_children_visits();
-    void update(float eval);
+    void update(float eval, bool forced=false);
     float get_eval_lcb(int color) const;
 
     // Defined in UCTNodeRoot.cpp, only to be called on m_root in UCTSearch
@@ -178,6 +176,9 @@ private:
     // UCT
     std::atomic<std::int16_t> m_virtual_loss{0};
     std::atomic<int> m_visits{0};
+    // number of forced moves visited after this node, to be
+    // subtracted from visits in the denominator of psa
+    std::atomic<int> m_forced{0};
     // UCT eval
     float m_policy;
     // Original net eval for this node (not children).
@@ -185,13 +186,16 @@ private:
     //    float m_net_value{0.5f};
     float m_net_alpkt{0.0f}; // alpha + \tilde k
     float m_net_beta{1.0f};
-    float m_net_crazy_rate{0.5f};
     float m_eval_bonus{0.0f}; // x bar
     float m_eval_base{0.0f}; // x base
     float m_eval_base_father{0.0f}; // x base of father node
     float m_eval_bonus_father{0.0f}; // x bar of father node
 #ifdef USE_EVALCMD
-    int m_progid{-1}; // progressive unique identifier
+    std::vector<int> m_progid; // progressive unique identifier,
+                               // typically it is just one integer,
+                               // but a second pass can be visited
+                               // more than once and in that case the
+                               // vector is used
 #endif
 #ifndef NDEBUG
     std::array<float, 5> m_last_urgency;

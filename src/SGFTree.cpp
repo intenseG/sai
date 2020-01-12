@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -46,6 +46,7 @@
 #include "GTP.h"
 #include "KoState.h"
 #include "SGFParser.h"
+#include "Random.h"
 #include "Utils.h"
 
 using namespace Utils;
@@ -100,6 +101,12 @@ GameState SGFTree::follow_mainline_state(unsigned int movenum) const {
                     return result;
                 }
                 result.play_move(colored_move.first, colored_move.second);
+                if (cfg_random_cnt > 0) {
+                    if (Random::get_Rng().randuint64(static_cast<std::uint64_t>(cfg_random_cnt))
+                        >= result.get_randcount()) {
+                        result.inc_randcount();
+                    }
+                }
             }
         }
         link = link->get_child(0);
@@ -513,8 +520,9 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor,
         } else {
             moves.append(";B[" + movestr + "]");
         }
-        moves.append("C[" + state->eval_comment()
-            + ", " + std::to_string(state->is_blunder()) + "]");
+        const auto move_tag = !state->is_random() ? "0" : 
+            (state->is_blunder() ? "3" : "1");
+        moves.append("C[" + state->eval_comment() + ", " + move_tag + "]");
         if (++counter % 3 == 0) {
             moves.append("\n");
         }
@@ -549,7 +557,7 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor,
     const auto fixcomment = selfplay ?
         " Starting GTP commands: time_settings 0 1 0]" : "]";
     header.append(", " + state->eval_comment(true) +
-                  ", is_bluder" + fixcomment);
+                  ", bitfield" + fixcomment);
 
     std::string result(header);
     result.append("\n");

@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -54,14 +54,11 @@ public:
     int get_handicap() const;
     int get_passes() const;
     int get_to_move() const;
-    int get_prisoners() const;
     void set_to_move(int tomove);
     void set_passes(int val);
     void increment_passes();
 
     float final_score() const;
-    float final_crazy_score();
-    double final_crazy_rate(double score);
     std::uint64_t get_symmetry_hash(int symmetry) const;
 
     size_t get_movenum() const;
@@ -72,12 +69,15 @@ public:
 
     void set_non_blunders(const std::vector<int> & non_blunders);
     //    void set_blunder_state(bool state);
-    bool is_blunder() const;
+    bool is_blunder() const { return m_blunder_chosen; };
+    bool is_random() const { return m_random_chosen; };
     void init_allowed_blunders();
     //    void dec_allowed_blunders();
     bool is_blunder_allowed() const;
     int get_allowed_blunders() const;
     bool is_symmetry_invariant(const int symmetry) const;
+    size_t get_randcount() const { return m_randcount; }
+    void inc_randcount() { ++m_randcount; }
 
     FullBoard board;
 
@@ -87,6 +87,10 @@ public:
     int m_komove;
     size_t m_movenum;
     int m_lastmove;
+
+    // number of moves chosen randomly until now
+    size_t m_randcount;
+    bool m_random_chosen = false;
 
     // is last (randomly chosen) move a blunder?
     // we don't save training info before that point

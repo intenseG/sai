@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -55,17 +55,22 @@ using namespace Utils;
 
 static void license_blurb() {
     printf(
-        "Leela Zero %s  Copyright (C) 2017-2019  Gian-Carlo Pascutto and contributors\n"
+        "SAI %s (%dx%d) is a fork of Leela Zero.\n"
+        "Leela Zero Copyright (C) 2017-2019  Gian-Carlo Pascutto and contributors.\n"
+        "SAI Copyright (C) 2018-2019 SAI Team.\n"
         "This program comes with ABSOLUTELY NO WARRANTY.\n"
         "This is free software, and you are welcome to redistribute it\n"
         "under certain conditions; see the COPYING file for details.\n\n",
-        PROGRAM_VERSION);
+        PROGRAM_VERSION, BOARD_SIZE, BOARD_SIZE);
 }
 
 static void calculate_thread_count_cpu(boost::program_options::variables_map & vm) {
     // If we are CPU-based, there is no point using more than the number of CPUs/
     auto cfg_max_threads = std::min(SMP::get_num_cpus(), size_t{MAX_CPUS});
 
+#ifndef NDEBUG
+    cfg_max_threads = 1;
+#endif
     if (vm["threads"].as<unsigned int>() > 0) {
         auto num_threads = vm["threads"].as<unsigned int>();
         if (num_threads > cfg_max_threads) {
@@ -121,6 +126,10 @@ static void calculate_thread_count_gpu(boost::program_options::variables_map & v
         cfg_num_threads = std::min(cfg_max_threads, cfg_batch_size * gpu_count * 2);
     }
 
+#ifndef NDEBUG
+    cfg_num_threads = 1;
+    cfg_batch_size = 1;
+#endif
     if (cfg_num_threads < cfg_batch_size) {
         printf("Number of threads = %d must be no smaller than batch size = %d\n", cfg_num_threads, cfg_batch_size);
         exit(EXIT_FAILURE);
@@ -137,10 +146,9 @@ static void parse_commandline(int argc, char *argv[]) {
     gen_desc.add_options()
         ("help,h", "Show commandline options.")
         ("gtp,g", "Enable GTP mode.")
-        ("acceleration-endgame", "Acceleration mode endgame. Instead of resigning, reduce playout to minimum.")
         ("japanese,j", "Enable Japanese scoring mode.")
         ("threads,t", po::value<unsigned int>()->default_value(0),
-                      "Number of threads to use. Select 0 to let leela-zero pick a reasonable default.")
+                      "Number of threads to use. Select 0 to let SAI pick a reasonable default.")
         ("playouts,p", po::value<int>(),
                        "Weaken engine by limiting the number of playouts. "
                        "Requires --noponder.")
@@ -158,12 +166,14 @@ static void parse_commandline(int argc, char *argv[]) {
         ("nrsymm", "Same as --symm, but the move is chosen to be "
          "in the general direction of the 'polite' eightth of the board, "
          "instead of randomly.")
+        ("noladdercode", "Don't use heuristics for deeper ladders exploration.")
         ("lagbuffer,b", po::value<int>()->default_value(cfg_lagbuffer_cs),
                         "Safety margin for time usage in centiseconds.")
         ("resignpct,r", po::value<int>()->default_value(cfg_resignpct),
                         "Resign when winrate is less than x%.\n"
                         "-1 uses 10% but scales for handicap.")
-        ("weights,w", po::value<std::string>()->default_value(cfg_weightsfile), "File with network weights.")
+        ("weights,w", po::value<std::string>()->default_value(cfg_weightsfile),
+         "File with network weights.")
         ("logfile,l", po::value<std::string>(), "File to log input/output to.")
         ("quiet,q", "Disable all diagnostic output.")
         ("timemanage", po::value<std::string>()->default_value("auto"),
@@ -177,7 +187,6 @@ static void parse_commandline(int argc, char *argv[]) {
         ("benchmark", "Test network and exit. Default args:\n-v3200 --noponder "
                       "-m0 -t1 -s1.")
         ("nocache", "Disable neural network cache.")
-        ("crazy", "Enable crazy mode.")
 #ifndef USE_CPU_ONLY
         ("cpu-only", "Use CPU-only implementation and do not use OpenCL device(s).")
 #endif
@@ -189,7 +198,8 @@ static void parse_commandline(int argc, char *argv[]) {
                 "ID of the OpenCL device(s) to use (disables autodetection).")
         ("full-tuner", "Try harder to find an optimal OpenCL tuning.")
         ("tune-only", "Tune OpenCL only and then exit.")
-        ("batchsize", po::value<unsigned int>()->default_value(0), "Max batch size.  Select 0 to let leela-zero pick a reasonable default.")
+        ("batchsize", po::value<unsigned int>()->default_value(0),
+         "Max batch size.  Select 0 to let SAI pick a reasonable default.")
 #ifdef USE_HALF
         ("precision", po::value<std::string>(),
             "Floating-point precision (single/half/auto).\n"
@@ -200,12 +210,15 @@ static void parse_commandline(int argc, char *argv[]) {
     po::options_description selfplay_desc("Self-play options");
     selfplay_desc.add_options()
         ("noise,n", "Enable policy network randomization.")
-        ("noise-value", po::value<float>()->default_value(cfg_noise_value, (boost::format("%g") % cfg_noise_value).str()),
-                     "Dirichilet noise for network randomization.")
+        ("noise-value",
+         po::value<float>()->default_value(cfg_noise_value,
+                                           (boost::format("%g") % cfg_noise_value).str()),
+         "Dirichilet noise for network randomization.")
         ("seed,s", po::value<std::uint64_t>(),
                    "Random number generation seed.")
         ("dumbpass,d", "Don't use heuristics for smarter passing.")
-        ("restrict_tt", "Restrict use of Tromp-Taylor score in search.")
+        ("restrict_tt", "Restrict use of Tromp-Taylor score in search "
+         "to avoid desperate attempt to win by passing because of TT.")
         ("randomcnt,m", po::value<int>()->default_value(cfg_random_cnt),
                         "Play more randomly the first x moves.")
         ("randomvisits",
@@ -223,6 +236,13 @@ static void parse_commandline(int argc, char *argv[]) {
             "Blunders number is bounded by a Poisson r.v. with this mean.")
         ("recordvisits", "Don't normalize visits to probabilities "
          "when writing training info.")
+        ("adv_features", "Include advanced features (legal moves, "
+         "last liberty intersections) when saving training data. Shorten "
+         "history from 8 past moves to last 4.")
+        ("chainlibs_feat", "Include 4 chain liberties feature plane "
+         "when saving training data. Shorten history to 1 move.")
+        ("chainsize_feat", "Include 4 chain size feature plane "
+         "when saving training data. Shorten history to 1 move.")
         ;
 #ifdef USE_TUNER
     po::options_description tuner_desc("Tuning options");
@@ -233,16 +253,10 @@ static void parse_commandline(int argc, char *argv[]) {
         ("logconst", po::value<float>())
         ("softmax_temp", po::value<float>())
         ("fpu_reduction", po::value<float>())
+        ("ci_alpha", po::value<float>())
         ("fpu_zero", "Use constant fpu=0.0 (AlphaGoZero). "
          "The default is reduced parent's value (LeelaZero).")
-        ("adv_features", "Include advanced features (legal moves, "
-         "last liberty intersections) when saving training data. Shorten "
-         "history from 8 past moves to last 4.")
-        ("chainlibs_feat", "Include 4 chain liberties feature plane "
-         "when saving training data. Shorten history to 1 move.")
-        ("chainsize_feat", "Include 4 chain size feature plane "
-         "when saving training data. Shorten history to 1 move.")
-        ("ci_alpha", po::value<float>())
+        ("nolcb", "Choose move based on visits instead of LCB.")
         ;
 #endif
     // These won't be shown, we use them to catch incorrect usage of the
@@ -332,14 +346,8 @@ static void parse_commandline(int argc, char *argv[]) {
     if (vm.count("fpu_zero")) {
         cfg_fpuzero = true;
     }
-    if (vm.count("adv_features")) {
-        cfg_adv_features  = true;
-    }
-    if (vm.count("chainlibs_feat")) {
-        cfg_chainlibs_features  = true;
-    }
-    if (vm.count("chainsize_feat")) {
-        cfg_chainsize_features  = true;
+    if (vm.count("nolcb")) {
+        cfg_uselcb = false;
     }
     if (vm.count("ci_alpha")) {
         cfg_ci_alpha = vm["ci_alpha"].as<float>();
@@ -361,17 +369,13 @@ static void parse_commandline(int argc, char *argv[]) {
 
     cfg_weightsfile = vm["weights"].as<std::string>();
     if (vm["weights"].defaulted() && !boost::filesystem::exists(cfg_weightsfile)) {
-        printf("A network weights file is required to use the program.\n");
-        printf("By default, Leela Zero looks for it in %s.\n", cfg_weightsfile.c_str());
+        printf("A network weights file %dx%d is required to use the program.\n", BOARD_SIZE, BOARD_SIZE);
+        printf("By default, SAI looks for it in %s.\n", cfg_weightsfile.c_str());
         exit(EXIT_FAILURE);
     }
 
     if (vm.count("gtp")) {
         cfg_gtp_mode = true;
-    }
-
-    if (vm.count("acceleration-endgame")) {
-        cfg_acceleration_endgame = true;
     }
 
     if (vm.count("japanese")) {
@@ -470,8 +474,16 @@ static void parse_commandline(int argc, char *argv[]) {
         cfg_recordvisits = true;
     }
 
-    if (vm.count("crazy")) {
-        cfg_crazy = true;
+    if (vm.count("adv_features")) {
+        cfg_adv_features  = true;
+    }
+
+    if (vm.count("chainlibs_feat")) {
+        cfg_chainlibs_features  = true;
+    }
+
+    if (vm.count("chainsize_feat")) {
+        cfg_chainsize_features  = true;
     }
 
     if (vm.count("playouts")) {
@@ -531,6 +543,9 @@ static void parse_commandline(int argc, char *argv[]) {
     if (vm.count("nrsymm")) {
         cfg_exploit_symmetries = true;
         cfg_symm_nonrandom = true;
+    }
+    if (vm.count("noladdercode")) {
+        cfg_laddercode = false;
     }
     if (vm.count("timemanage")) {
         auto tm = vm["timemanage"].as<std::string>();
@@ -664,7 +679,7 @@ int main(int argc, char *argv[]) {
     for (;;) {
         if (!cfg_gtp_mode) {
             maingame->display_state();
-            std::cout << "Leela: ";
+            std::cout << "SAI: ";
         }
 
         auto input = std::string{};

@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -333,13 +333,11 @@ float FastBoard::area_score(float komi) const {
 
 float FastBoard::territory_score(float komi) {
     const auto territory = compute_territory();
-#ifndef NDEBUG
     display_board();
     myprintf ("Scoring:\n"
               "black t: %d, white t: %d, black p: %d, white p: %d, komi: %.1f",
               territory.first, territory.second, get_prisoners(BLACK),
               get_prisoners(WHITE), komi);
-#endif
     return territory.first - territory.second - komi
         + get_prisoners(BLACK) - get_prisoners(WHITE);
 }

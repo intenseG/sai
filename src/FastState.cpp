@@ -1,20 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
     Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -57,11 +57,11 @@ void FastState::init_game(int size, float komi) {
     m_handicap = 0;
     m_passes = 0;
 
+    m_randcount = 0;
     m_non_blunders = {};
     if (cfg_blunder_thr < 1.0f) {
         init_allowed_blunders();
     }
-    return;
 }
 
 void FastState::set_non_blunders(const std::vector<int> & non_blunders) {
@@ -84,6 +84,12 @@ void FastState::reset_game() {
     m_handicap = 0;
     m_komove = FastBoard::NO_VERTEX;
     m_lastmove = FastBoard::NO_VERTEX;
+
+    m_randcount = 0;
+    m_non_blunders = {};
+    if (cfg_blunder_thr < 1.0f) {
+        init_allowed_blunders();
+    }
 }
 
 void FastState::reset_board() {
@@ -116,7 +122,11 @@ void FastState::play_move(int color, int vertex) {
     m_lastmove = vertex;
     m_movenum++;
 
-    m_blunder_chosen = std::find( begin(m_non_blunders), end(m_non_blunders), vertex ) == end(m_non_blunders);
+    if (!m_non_blunders.empty()) {
+        m_blunder_chosen = end(m_non_blunders) ==
+            std::find( begin(m_non_blunders), end(m_non_blunders), vertex );
+        m_random_chosen = m_non_blunders[0] != vertex;
+    }
 
     if (m_blunder_chosen && m_allowed_blunders > 0) {
         m_allowed_blunders--;
@@ -175,7 +185,7 @@ void FastState::display_state() {
     }
     myprintf("    White (O) Prisoners: %d\n",
              board.get_prisoners(FastBoard::WHITE));
-    myprintf("                     Komi: %.1f\n", get_komi());
+    myprintf("Move %3d             Komi: %.1f\n", get_movenum(), get_komi());
 
     board.display_board(get_last_move());
 }
@@ -226,19 +236,6 @@ float FastState::final_score() const {
     return board.area_score(get_komi());
 }
 
-int FastState::get_prisoners() const {
-    return board.get_prisoners(get_to_move());
-}
-
-float FastState::final_crazy_score() {
-    return board.territory_score(get_komi() - 1.0f);
-}
-
-double FastState::final_crazy_rate(double score) {
-    auto prisoners = board.get_prisoners(get_to_move());
-    return Utils::calc_crazy_rate(prisoners, score);
-}
-
 float FastState::get_komi() const {
     return m_komi;
 }
@@ -266,10 +263,6 @@ std::uint64_t FastState::get_symmetry_hash(int symmetry) const {
 // void FastState::set_blunder_state(bool state) {
 //     m_blunder_chosen = state;
 // }
-
-bool FastState::is_blunder() const {
-    return m_blunder_chosen;
-}
 
 void FastState::init_allowed_blunders() {
     auto distribution = std::poisson_distribution<>{cfg_blunder_rndmax_avg};

@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 #
-#    This file is part of Leela Zero.
+#    This file is part of SAI, which is a fork of Leela Zero.
 #    Copyright (C) 2017-2018 Gian-Carlo Pascutto
-#    Copyright (C) 2018 SAI Team
+#    Copyright (C) 2018-2019 SAI Team
 #
-#    Leela Zero is free software: you can redistribute it and/or modify
+#    SAI is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    Leela Zero is distributed in the hope that it will be useful,
+#    SAI is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+#    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
 import numpy as np
@@ -113,7 +113,9 @@ class Timer:
         return e
 
 class TFProcess:
-    def __init__(self, residual_blocks, residual_filters):
+    def __init__(self, residual_blocks, residual_filters,
+                 s_rate, s_minsteps, s_steps, s_maxsteps, s_maxkeep,
+                 s_policyloss, s_mseloss, s_regloss):
         # Network structure
         self.residual_blocks = residual_blocks
         self.residual_filters = residual_filters
@@ -132,6 +134,15 @@ class TFProcess:
 
         # For exporting
         self.weights = []
+
+        self.train_rate = s_rate
+        self.min_steps = s_minsteps
+        self.train_steps = s_steps
+        self.max_steps = s_maxsteps
+        self.max_keep = s_maxkeep
+        self.policy_loss_wt = s_policyloss
+        self.mse_loss_wt = s_mseloss
+        self.reg_loss_wt = s_regloss
 
         # Output weight file with averaged weights
         self.swa_enabled = False
@@ -195,7 +206,7 @@ class TFProcess:
         # You need to change the learning rate here if you are training
         # from a self-play training set, for example start with 0.005 instead.
         opt = tf.train.MomentumOptimizer(
-            learning_rate=LEARN_RATE, momentum=0.9, use_nesterov=True)
+            learning_rate=self.train_rate, momentum=0.9, use_nesterov=True)
 
         opt = LossScalingOptimizer(opt, scale=self.loss_scale)
 
@@ -306,7 +317,7 @@ class TFProcess:
                          self.logbase + "/train"), self.session.graph)
 
         # Build checkpoint saver
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep = self.max_keep)
 
         # Initialize all variables
         self.session.run(tf.global_variables_initializer())
@@ -353,7 +364,7 @@ class TFProcess:
 
         # For training from a (smaller) dataset of strong players, you will
         # want to reduce the factor in front of self.mse_loss here.
-        loss = POLICY_LOSS_WT * policy_loss + MSE_LOSS_WT * mse_loss + REG_LOSS_WT * reg_term
+        loss = self.policy_loss_wt * policy_loss + self.mse_loss_wt * mse_loss + self.reg_loss_wt * reg_term
 
         return loss, policy_loss, mse_loss, reg_term, y_conv
 
@@ -430,7 +441,7 @@ class TFProcess:
         stats = Stats()
         timer = Timer()
         n = 0
-        while n < MAX_TRAINING_STEPS or MAX_TRAINING_STEPS == 0:
+        while n < self.max_steps or self.max_steps == 0:
             n += 1
             batch = next(train_data)
             # Measure losses and compute gradients for this batch.
@@ -438,13 +449,13 @@ class TFProcess:
             stats.add(losses)
             # fetch the current global step.
             steps = tf.train.global_step(self.session, self.global_step)
-            if steps % self.macrobatch == (self.macrobatch-1):
+            if n % self.macrobatch == (self.macrobatch-1):
                 # Apply the accumulated gradients to the weights.
                 self.session.run([self.train_op])
                 # Clear the accumulated gradient.
                 self.session.run([self.clear_op])
 
-            if steps % info_steps == 0:
+            if n % info_steps == 0:
                 speed = info_steps * self.batch_size / timer.elapsed()
                 print("step {}, policy={:g} mse={:g} reg={:g} total={:g} ({:g} pos/s)".format(
                     steps, stats.mean('policy'), stats.mean('mse'), stats.mean('reg'),
@@ -455,7 +466,7 @@ class TFProcess:
                     tf.Summary(value=summaries), steps)
                 stats.clear()
 
-            if steps % TRAINING_STEPS == 0:
+            if n >= self.min_steps and n % self.train_steps == 0:
                 test_stats = Stats()
                 test_batches = 800 # reduce sample mean variance by ~28x
                 for _ in range(0, test_batches):
@@ -478,16 +489,16 @@ class TFProcess:
                 print("Model saved in file: {}".format(save_path))
                 leela_path = path + "-" + str(steps) + ".txt"
                 self.save_leelaz_weights(leela_path)
-                print("Leela weights saved to {}".format(leela_path))
+                print("SAI weights saved to {}".format(leela_path))
                 # Things have likely changed enough
                 # that stats are no longer valid.
 
                 if self.swa_enabled:
                     self.save_swa_network(steps, path, leela_path, train_data)
 
-                save_path = self.saver.save(self.session, path,
-                                            global_step=steps)
-                print("Model saved in file: {}".format(save_path))
+                    save_path = self.saver.save(self.session, path,
+                                                global_step=steps)
+                    print("Model saved in file: {}".format(save_path))
         print("Finished.")
         os._exit(0)
 

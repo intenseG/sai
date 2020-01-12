@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 #
-#    This file is part of Leela Zero.
+#    This file is part of SAI, which is a fork of Leela Zero.
 #    Copyright (C) 2017-2018 Gian-Carlo Pascutto
-#    Copyright (C) 2018 SAI Team
+#    Copyright (C) 2018-2019 SAI Team
 #
-#    Leela Zero is free software: you can redistribute it and/or modify
+#    SAI is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    Leela Zero is distributed in the hope that it will be useful,
+#    SAI is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
-
+#    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
 from tfprocess import TFProcess
 from chunkparser import ChunkParser
@@ -117,6 +116,24 @@ def main():
         help="Log file prefix (for tensorboard) (default: %(default)s)")
     parser.add_argument("--sample", default=DOWN_SAMPLE, type=int,
         help="Rate of data down-sampling to use (default: %(default)d)")
+    parser.add_argument("--bufferbits", default=TRAIN_SHUFFLE_BITS, type=int,
+        help="Train shuffle-buffer size in bits (default: %(default)d)")
+    parser.add_argument("--rate", default=LEARN_RATE, type=float,
+        help="Learning rate (default: %(default)f)")
+    parser.add_argument("--minsteps", default=FIRST_NETWORK_STEPS , type=int,
+        help="First network after this many steps (default: %(default)d)")
+    parser.add_argument("--steps", default=TRAINING_STEPS, type=int,
+        help="Training step before writing a network (default: %(default)d)")
+    parser.add_argument("--maxsteps", default=MAX_TRAINING_STEPS, type=int,
+        help="Terminates after this many steps (default: %(default)d)")
+    parser.add_argument("--maxkeep", default=MAX_SAVER_TO_KEEP, type=int,
+        help="Keeps meta files for at most this many networks (default: %(default)d)")
+    parser.add_argument("--policyloss", default=POLICY_LOSS_WT, type=float,
+        help="Coefficient for policy term in loss function (default: %(default)f)")
+    parser.add_argument("--mseloss", default=MSE_LOSS_WT, type=float,
+        help="Coefficient for mse term in loss function (default: %(default)f)")
+    parser.add_argument("--regloss", default=REG_LOSS_WT, type=float,
+        help="Coefficient for regularizing term in loss function (default: %(default)f)")
     args = parser.parse_args()
 
     blocks = args.blocks or args.blockspref
@@ -144,16 +161,18 @@ def main():
         len(training), len(test)))
 
     train_parser = ChunkParser(FileDataSrc(training),
-                               shuffle_size=1<<TRAIN_SHUFFLE_BITS, # was 20 -- 2.2GB of RAM.
+                               shuffle_size=1<<args.bufferbits, # was 20 -- 2.2GB of RAM.
                                sample=args.sample,
                                batch_size=RAM_BATCH_SIZE).parse()
 
     test_parser = ChunkParser(FileDataSrc(test),
-                              shuffle_size=1<<TEST_SHUFFLE_BITS,  # was 19
+                              shuffle_size=1<<(args.bufferbits-3),  # was 19
                               sample=args.sample,
                               batch_size=RAM_BATCH_SIZE).parse()
 
-    tfprocess = TFProcess(blocks, filters)
+    tfprocess = TFProcess(blocks, filters,
+                          args.rate, args.minsteps, args.steps, args.maxsteps, args.maxkeep,
+                          args.policyloss, args.mseloss, args.regloss)
     tfprocess.init(RAM_BATCH_SIZE,
                    logbase=args.logbase,
                    macrobatch=BATCH_SIZE // RAM_BATCH_SIZE)

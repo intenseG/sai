@@ -1,19 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
+    Copyright (C) 2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -49,7 +50,7 @@
 #include "Utils.h"
 #include "Random.h"
 
-const auto TUNER_FILE_LOCAL = std::string("leelaz_opencl_tuning");
+const auto TUNER_FILE_LOCAL = std::string("sai_opencl_tuning");
 
 template <typename net_t>
 std::vector<std::string> Tuner<net_t>::tuned_devices;
@@ -186,6 +187,15 @@ bool Tuner<net_t>::valid_config_sgemm(Parameters p, bool exhaustive) {
             return false;
         }
         if (p["NDIMC"] < p["NDIMB"]) {
+            return false;
+        }
+        if (p["MWG"] < 32) {
+            return false;
+        }
+        if (p["NWG"] < 32) {
+            return false;
+        }
+        if (p["KWG"] < 32) {
             return false;
         }
         // VWM / VWN has no meaning if we don't do SA / SB.
@@ -335,8 +345,8 @@ std::vector<Parameters> Tuner<net_t>::build_valid_params() {
     if (cfg_sgemm_exhaustive) {
         topts = {
             {"MWG", {32, 64, 128, 256}},
-            {"NWG", {8, 16, 32, 64}},
-            {"KWG", {16, 32, 64}},
+            {"NWG", {8, 16, 32, 64, 128, 256}},
+            {"KWG", {16, 32, 64, 128, 256}},
             {"MDIMC", {8, 16, 32, 64}},
             {"NDIMC", {8, 16, 32, 64}},
             {"MDIMA", {8, 16, 32}},
@@ -352,8 +362,8 @@ std::vector<Parameters> Tuner<net_t>::build_valid_params() {
     } else {
         topts = {
             {"MWG", {32, 64, 128}},
-            {"NWG", {8, 16, 32}},
-            {"KWG", {16, 32}},
+            {"NWG", {16, 32, 64, 128}},
+            {"KWG", {16, 32, 64, 128}},
             {"MDIMC", {8, 16, 32}},
             {"NDIMC", {8, 16, 32}},
             {"MDIMA", {8, 16, 32}},
@@ -402,8 +412,8 @@ std::string Tuner<net_t>::tune_sgemm(const int m, const int n, const int k,
                               const int batch_size, const int runs) {
     // This needs to be at minimum the maximum (MNK/WG) values above.
     auto m_max = std::max(256, m);
-    auto n_max = std::max(64, n);
-    auto k_max = std::max(64, k);
+    auto n_max = std::max(256, n);
+    auto k_max = std::max(256, k);
 
     auto at_size = batch_size
         * next_power_of_two(k_max) * next_power_of_two(m_max);

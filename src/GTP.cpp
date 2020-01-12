@@ -28,10 +28,6 @@
     work.
 */
 
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "config.h"
 
 #include <algorithm>
@@ -39,7 +35,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
-#include <cstring>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -67,7 +62,6 @@ using namespace Utils;
 
 // Configuration flags
 
-bool cfg_acceleration_endgame;
 bool cfg_gtp_mode;
 bool cfg_japanese_mode;
 bool cfg_use_nncache;
@@ -85,11 +79,13 @@ int cfg_resignpct;
 float cfg_resign_threshold;
 int cfg_noise;
 bool cfg_fpuzero;
+bool cfg_uselcb;
 bool cfg_adv_features;
 bool cfg_chainlibs_features;
 bool cfg_chainsize_features;
 bool cfg_exploit_symmetries;
 bool cfg_symm_nonrandom;
+bool cfg_laddercode;
 float cfg_noise_value;
 float cfg_noise_weight;
 float cfg_lambda;
@@ -102,8 +98,6 @@ std::uint64_t cfg_rng_seed;
 bool cfg_dumbpass;
 bool cfg_restrict_tt;
 bool cfg_recordvisits;
-bool cfg_crazy;
-// float cfg_crazy_rate;
 #ifdef USE_OPENCL
 std::vector<int> cfg_gpus;
 bool cfg_sgemm_exhaustive;
@@ -132,135 +126,6 @@ float cfg_blunder_thr;
 float cfg_losing_thr;
 float cfg_blunder_rndmax_avg;
 AnalyzeTags cfg_analyze_tags;
-
-// const unsigned int SHA256::sha256_k[64] = //UL = uint32
-//             {0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
-//              0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-//              0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-//              0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-//              0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
-//              0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-//              0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
-//              0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-//              0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-//              0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-//              0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
-//              0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-//              0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
-//              0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-//              0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-//              0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
-
-// void SHA256::transform(const unsigned char *message, unsigned int block_nb)
-// {
-//     uint32 w[64];
-//     uint32 wv[8];
-//     uint32 t1, t2;
-//     const unsigned char *sub_block;
-//     int i;
-//     int j;
-//     for (i = 0; i < (int) block_nb; i++) {
-//         sub_block = message + (i << 6);
-//         for (j = 0; j < 16; j++) {
-//             SHA2_PACK32(&sub_block[j << 2], &w[j]);
-//         }
-//         for (j = 16; j < 64; j++) {
-//             w[j] =  SHA256_F4(w[j -  2]) + w[j -  7] + SHA256_F3(w[j - 15]) + w[j - 16];
-//         }
-//         for (j = 0; j < 8; j++) {
-//             wv[j] = m_h[j];
-//         }
-//         for (j = 0; j < 64; j++) {
-//             t1 = wv[7] + SHA256_F2(wv[4]) + SHA2_CH(wv[4], wv[5], wv[6])
-//                 + sha256_k[j] + w[j];
-//             t2 = SHA256_F1(wv[0]) + SHA2_MAJ(wv[0], wv[1], wv[2]);
-//             wv[7] = wv[6];
-//             wv[6] = wv[5];
-//             wv[5] = wv[4];
-//             wv[4] = wv[3] + t1;
-//             wv[3] = wv[2];
-//             wv[2] = wv[1];
-//             wv[1] = wv[0];
-//             wv[0] = t1 + t2;
-//         }
-//         for (j = 0; j < 8; j++) {
-//             m_h[j] += wv[j];
-//         }
-//     }
-// }
-
-// void SHA256::init()
-// {
-//     m_h[0] = 0x6a09e667;
-//     m_h[1] = 0xbb67ae85;
-//     m_h[2] = 0x3c6ef372;
-//     m_h[3] = 0xa54ff53a;
-//     m_h[4] = 0x510e527f;
-//     m_h[5] = 0x9b05688c;
-//     m_h[6] = 0x1f83d9ab;
-//     m_h[7] = 0x5be0cd19;
-//     m_len = 0;
-//     m_tot_len = 0;
-// }
-
-// void SHA256::update(const unsigned char *message, unsigned int len)
-// {
-//     unsigned int block_nb;
-//     unsigned int new_len, rem_len, tmp_len;
-//     const unsigned char *shifted_message;
-//     tmp_len = SHA224_256_BLOCK_SIZE - m_len;
-//     rem_len = len < tmp_len ? len : tmp_len;
-//     memcpy(&m_block[m_len], message, rem_len);
-//     if (m_len + len < SHA224_256_BLOCK_SIZE) {
-//         m_len += len;
-//         return;
-//     }
-//     new_len = len - rem_len;
-//     block_nb = new_len / SHA224_256_BLOCK_SIZE;
-//     shifted_message = message + rem_len;
-//     transform(m_block, 1);
-//     transform(shifted_message, block_nb);
-//     rem_len = new_len % SHA224_256_BLOCK_SIZE;
-//     memcpy(m_block, &shifted_message[block_nb << 6], rem_len);
-//     m_len = rem_len;
-//     m_tot_len += (block_nb + 1) << 6;
-// }
-
-// void SHA256::final(unsigned char *digest)
-// {
-//     unsigned int block_nb;
-//     unsigned int pm_len;
-//     unsigned int len_b;
-//     int i;
-//     block_nb = (1 + ((SHA224_256_BLOCK_SIZE - 9)
-//                      < (m_len % SHA224_256_BLOCK_SIZE)));
-//     len_b = (m_tot_len + m_len) << 3;
-//     pm_len = block_nb << 6;
-//     memset(m_block + m_len, 0, pm_len - m_len);
-//     m_block[m_len] = 0x80;
-//     SHA2_UNPACK32(len_b, m_block + pm_len - 4);
-//     transform(m_block, block_nb);
-//     for (i = 0 ; i < 8; i++) {
-//         SHA2_UNPACK32(m_h[i], &digest[i << 2]);
-//     }
-// }
-
-// std::string SHA256::sha256(const std::string & input)
-// {
-//     unsigned char digest[SHA256::DIGEST_SIZE];
-//     memset(digest,0,SHA256::DIGEST_SIZE);
-
-//     SHA256 ctx = SHA256();
-//     ctx.init();
-//     ctx.update( (unsigned char*)input.c_str(), input.length());
-//     ctx.final(digest);
-
-//     char buf[2*SHA256::DIGEST_SIZE+1];
-//     buf[2*SHA256::DIGEST_SIZE] = 0;
-//     for (unsigned int i = 0; i < SHA256::DIGEST_SIZE; i++)
-//         sprintf(buf+i*2, "%02x", digest[i]);
-//     return std::string(buf);
-// }
 
 /* Parses tags for the lz-analyze GTP command and friends */
 AnalyzeTags::AnalyzeTags(std::istringstream& cmdstream, const GameState& game) {
@@ -476,7 +341,6 @@ void GTP::initialize(std::unique_ptr<Network>&& net) {
 }
 
 void GTP::setup_default_parameters() {
-    cfg_acceleration_endgame = false;
     cfg_gtp_mode = false;
     cfg_japanese_mode = false;
     cfg_use_nncache = true;
@@ -514,12 +378,12 @@ void GTP::setup_default_parameters() {
     cfg_chainsize_features = false;
     cfg_exploit_symmetries = false;
     cfg_symm_nonrandom = false;
+    cfg_laddercode = true;
     cfg_fpuzero = false;
+    cfg_uselcb = true;
     cfg_noise_value = 0.03;
     cfg_noise_weight = 0.25;
     cfg_recordvisits = false;
-    cfg_crazy = false;
-    // cfg_crazy_rate = 0.5;
     cfg_blunder_thr = 1.0f;
     cfg_losing_thr = 0.05f;
     // nu = ln(4) => P(X=0) = 0.25
@@ -1101,23 +965,33 @@ void GTP::execute(GameState & game, const std::string& xinput) {
         cmdstream >> filename;
         if (cmdstream.fail()) {
             char num[8], komi[16], lambda[16], mu[16];
+            const auto slash = cfg_weightsfile.find_last_of("/");
+            const auto stpos = (slash == std::string::npos ? 0 : slash + 1);
             std::sprintf(num, "%03zu", game.get_movenum());
             std::sprintf(komi, "%.1f", game.get_komi());
             std::sprintf(lambda, "%.2f", cfg_lambda);
             std::sprintf(mu, "%.2f", cfg_mu);
-            filename = std::string("sde-") + num + "-" + cfg_weightsfile.substr(0,4)
+            filename = std::string("sde-") + num + "-" + cfg_weightsfile.substr(stpos,4)
                 + "-" + komi + "-" + lambda + "-" + mu;
             // todo code the position
             //            gtp_printf(id, "%s\n", eval_string.c_str());
         }
 
         std::ofstream out(filename + ".csv");
-        out << eval_string;
-        out.close();
+        if (out) {
+            out << eval_string;
+            out.close();
+        } else {
+            myprintf("Error opening %s.csv\n", filename.c_str());
+        }
 
         std::ofstream outsgf(filename + ".sgf");
-        outsgf << eval_sgf_string;
-        outsgf.close();
+        if (outsgf) {
+            outsgf << eval_sgf_string;
+            outsgf.close();
+        } else {
+            myprintf("Error opening %s.sgf\n", filename.c_str());
+        }
 
         gtp_printf(id, "");
 
@@ -1189,11 +1063,9 @@ void GTP::execute(GameState & game, const std::string& xinput) {
         gtp_printf(id, "%s %s", color, coordinate.c_str());
         return;
     } else if (command.find("move_history") == 0) {
-        if (game.get_movenum() == 0) {
-            gtp_printf_raw("= \n");
-        } else {
-            gtp_printf_raw("= ");
-        }
+        gtp_printf_raw("=%s %s",
+                       id == -1 ? "" : std::to_string(id).c_str(),
+                       game.get_movenum() == 0 ? "\n" : "");
         auto game_history = game.get_game_history();
         // undone moves may still be present, so reverse the portion of the
         // array we need and resize to trim it down for iteration.

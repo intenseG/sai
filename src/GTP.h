@@ -80,7 +80,6 @@ private:
     size_t m_min_moves{0};
 };
 
-extern bool cfg_acceleration_endgame;
 extern bool cfg_gtp_mode;
 extern bool cfg_japanese_mode;
 extern bool cfg_use_nncache;
@@ -98,11 +97,13 @@ extern int cfg_resignpct;
 extern float cfg_resign_threshold;
 extern int cfg_noise;
 extern bool cfg_fpuzero;
+extern bool cfg_uselcb;
 extern bool cfg_adv_features;
 extern bool cfg_chainlibs_features;
 extern bool cfg_chainsize_features;
 extern bool cfg_exploit_symmetries;
 extern bool cfg_symm_nonrandom;
+extern bool cfg_laddercode;
 extern float cfg_noise_value;
 extern float cfg_noise_weight;
 extern float cfg_komi;
@@ -115,8 +116,6 @@ extern std::uint64_t cfg_rng_seed;
 extern bool cfg_dumbpass;
 extern bool cfg_restrict_tt;
 extern bool cfg_recordvisits;
-extern bool cfg_crazy;
-// extern float cfg_crazy_rate;
 #ifdef USE_OPENCL
 extern std::vector<int> cfg_gpus;
 extern bool cfg_sgemm_exhaustive;

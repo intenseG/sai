@@ -1,19 +1,20 @@
 /*
-    This file is part of Leela Zero.
+    This file is part of SAI, which is a fork of Leela Zero.
     Copyright (C) 2017-2019 Gian-Carlo Pascutto and contributors
+    Copyright (C) 2018-2019 SAI Team
 
-    Leela Zero is free software: you can redistribute it and/or modify
+    SAI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Leela Zero is distributed in the hope that it will be useful,
+    SAI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Leela Zero.  If not, see <http://www.gnu.org/licenses/>.
+    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
     Additional permission under GNU GPL version 3 section 7
 
@@ -158,6 +159,8 @@ int FullBoard::update_board(const int color, const int i) {
     auto captured_stones = 0;
     int captured_vtx;
 
+    m_lastforced = false;
+
     for (int k = 0; k < 4; k++) {
         int ai = i + m_dirs[k];
 
@@ -167,9 +170,20 @@ int FullBoard::update_board(const int color, const int i) {
                 captured_vtx = ai;
                 captured_stones += this_captured;
             }
+            // if we are giving atari to an opponent chain, this may
+            // be a forced move, during a ladder
+            if (m_libs[m_parent[ai]] == 1) {
+                m_lastforced = true;
+            }
         } else if (m_state[ai] == color) {
             int ip = m_parent[i];
             int aip = m_parent[ai];
+
+            // if we are extending our own chain which was in atari,
+            // this may be a forced move, during a ladder
+            if (m_libs[aip] <= 0) {
+                m_lastforced = true;
+            }
 
             if (ip != aip) {
                 if (m_stones[ip] >= m_stones[aip]) {
