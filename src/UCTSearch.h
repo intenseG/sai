@@ -139,6 +139,8 @@ public:
     std::string explain_last_think() const;
     SearchResult play_simulation(GameState& currstate, UCTNode* const node);
 
+    // if true, it won't issue passes unless there is no other move
+    void passlock(bool lock);
 private:
     float get_min_psa_ratio() const;
     void dump_stats(FastState& state, UCTNode& parent);
@@ -174,6 +176,8 @@ private:
     int m_maxplayouts;
     int m_maxvisits;
     std::string m_think_output;
+    bool m_acceleration_mode = false;
+    bool m_passlock = true;
 
 #ifdef USE_EVALCMD
     int m_nodecounter=0;

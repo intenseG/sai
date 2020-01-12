@@ -146,6 +146,7 @@ static void parse_commandline(int argc, char *argv[]) {
     gen_desc.add_options()
         ("help,h", "Show commandline options.")
         ("gtp,g", "Enable GTP mode.")
+        ("acceleration-endgame", "Acceleration mode endgame. Instead of resigning, reduce playout to minimum.")
         ("japanese,j", "Enable Japanese scoring mode.")
         ("threads,t", po::value<unsigned int>()->default_value(0),
                       "Number of threads to use. Select 0 to let SAI pick a reasonable default.")

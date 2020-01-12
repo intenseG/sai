@@ -62,6 +62,7 @@ using namespace Utils;
 
 // Configuration flags
 
+bool cfg_acceleration_endgame;
 bool cfg_gtp_mode;
 bool cfg_japanese_mode;
 bool cfg_use_nncache;
@@ -341,6 +342,7 @@ void GTP::initialize(std::unique_ptr<Network>&& net) {
 }
 
 void GTP::setup_default_parameters() {
+    cfg_acceleration_endgame = false;
     cfg_gtp_mode = false;
     cfg_japanese_mode = false;
     cfg_use_nncache = true;
