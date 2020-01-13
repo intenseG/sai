@@ -379,6 +379,10 @@ static void parse_commandline(int argc, char *argv[]) {
         cfg_gtp_mode = true;
     }
 
+    if (vm.count("acceleration-endgame")) {
+        cfg_acceleration_endgame = true;
+    }
+
     if (vm.count("japanese")) {
         cfg_japanese_mode = true;
     }
