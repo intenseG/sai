@@ -17,8 +17,8 @@
 #    along with SAI.  If not, see <http://www.gnu.org/licenses/>.
 
 # 16 planes, 1 side to move, 1 x BOARD_SQUARES probs, 1 winner = 19 lines
-INPUT_PLANES = 12
-DATA_ITEM_LINES = 15
+INPUT_PLANES = 16
+DATA_ITEM_LINES = 19
 
 # Board size and number of squares in a board. Board size must be an odd number!
 BOARD_SIZE = 19
@@ -60,7 +60,7 @@ DOWN_SAMPLE = 16
 RESIDUAL_FILTERS = 192
 RESIDUAL_BLOCKS = 15
 POLICY_OUTPUTS = 2
-INPUT_STM = 0 # 1: both side to move and komi in input (18 input planes)
+INPUT_STM = 1 # 1: both side to move and komi in input (18 input planes)
               # 0: only komi in input (17 input planes)
 WEIGHTS_FILE_VER = "209"  # 'advanced features' + 'komi policy'
                          # bit 0,   1: LZ must be on
@@ -103,4 +103,4 @@ MAX_TRAINING_STEPS = 128000
 FIRST_NETWORK_STEPS = 0
 
 # Maximum number of networks of which to keep meta files
-MAX_SAVER_TO_KEEP = 12
+MAX_SAVER_TO_KEEP = 16
