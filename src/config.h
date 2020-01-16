@@ -123,7 +123,7 @@ static constexpr auto KOMI = 7.5f;
 #define USE_EVALCMD
 
 static constexpr auto PROGRAM_NAME = "BSK";
-static constexpr auto PROGRAM_VERSION = "0.17.5";
+static constexpr auto PROGRAM_VERSION = "0.17";
 
 /*
  * OpenBLAS limitation: the default configuration on some Linuxes
