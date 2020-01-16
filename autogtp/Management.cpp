@@ -273,11 +273,11 @@ QString Management::getBoolOption(const QJsonObject &ob, const QString &key, con
 QString Management::getOptionsString(const QJsonObject &opt, const QString &rnd) {
     QString options;
     options.append(getOption(opt, "playouts", " -p ", "0"));
-    options.append(getOption(opt, "visits", " -v ", "1600"));
+    options.append(getOption(opt, "visits", " -v ", "1601"));
     options.append(getOption(opt, "komi", " --komi ", "7.5"));
     options.append(getOption(opt, "lambda", " --lambda ", "0.5"));
     options.append(getOption(opt, "noise_value", " --noise-value ", "0.03"));
-    options.append(getOption(opt, "resignation_percent", " -r ", "1"));
+    options.append(getOption(opt, "resignation_percent", " -r ", "5"));
     options.append(getOption(opt, "randomcnt", " -m ", "30"));
     options.append(getOption(opt, "threads", " -t ", "6"));
     options.append(getOption(opt, "batchsize", " --batchsize ", "5"));

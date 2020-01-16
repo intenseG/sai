@@ -55,7 +55,7 @@ using namespace Utils;
 
 static void license_blurb() {
     printf(
-        "SAI %s (%dx%d) is a fork of Leela Zero.\n"
+        "BSK %s (%dx%d) is a fork of Leela Zero.\n"
         "Leela Zero Copyright (C) 2017-2019  Gian-Carlo Pascutto and contributors.\n"
         "SAI Copyright (C) 2018-2019 SAI Team.\n"
         "This program comes with ABSOLUTELY NO WARRANTY.\n"
