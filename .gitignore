@@ -1,8 +1,15 @@
 leelaz
+*.exe
 *.o
 *.d
 *.gz
+*.dll
+bsk_config*.txt
+report.txt
+checkpoint
+kgsGtp.jar
 .vscode/settings.json
+training/tf_v2
 training/tf/leelalogs
 training/tf/checkpoint
 training/tf/venv

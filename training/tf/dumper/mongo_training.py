@@ -4,7 +4,7 @@ import gzip
 import pymongo
 
 client = pymongo.MongoClient()
-db = client.test
+db = client.bsk0
 
 # MongoDB closes idle cursors after 10 minutes unless specific
 # options are given. That means this query will time out before

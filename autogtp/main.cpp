@@ -84,10 +84,10 @@ int main(int argc, char *argv[]) {
 
     QCommandLineOption serverUrlOption(
         "url", "Set the URL of leela-zero/SAI server",
-                "server url", "http://localhost:8080/");
+                "server url", "http://igostadium.net:52516/");
 
     QCommandLineOption usernameOption(
-        "username", "Set username for authorization purposes", "username", "");
+        "username", "Set username for authorization purposes", "username", "guest");
 
     QCommandLineOption passwordOption(
         "password", "Set password for authorization purposes", "password", "");

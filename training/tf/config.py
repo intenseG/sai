@@ -62,7 +62,7 @@ RESIDUAL_BLOCKS = 15
 POLICY_OUTPUTS = 2
 INPUT_STM = 1 # 1: both side to move and komi in input (18 input planes)
               # 0: only komi in input (17 input planes)
-WEIGHTS_FILE_VER = "209"  # 'advanced features' + 'komi policy'
+WEIGHTS_FILE_VER = "17"  # 'advanced features' + 'komi policy'
                          # bit 0,   1: LZ must be on
                          # bit 4,  16: advanced features (+2 planes)
                          # bit 5,  32: komi policy
@@ -78,11 +78,11 @@ DOUBLE_Y = 3
 DOUBLE_T = 4 # last two types are equivalent, changing
 DOUBLE_I = 5 # only the order of weights in the file
 
-VALUE_HEAD_TYPE = DOUBLE_Y
+VALUE_HEAD_TYPE = SINGLE
 VAL_OUTPUTS = 5
 VBE_OUTPUTS = 1 # only for double W
 VAL_CHANS = 384
-VBE_CHANS = 192 # only for double W and Y
+VBE_CHANS = 256 # only for double W and Y
 
 # Loss weights
 POLICY_LOSS_WT = 1.0
@@ -90,7 +90,7 @@ MSE_LOSS_WT = 1.0
 REG_LOSS_WT = 1.0
 
 # Learning rate
-LEARN_RATE = 0.005
+LEARN_RATE = 0.001
 
 # Outputs new network after the specified number of training steps
 TRAINING_STEPS = 8000
