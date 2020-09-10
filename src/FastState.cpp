@@ -144,6 +144,10 @@ int FastState::get_last_move() const {
     return m_lastmove;
 }
 
+int FastState::get_total_passes() const {
+    return m_total_passes;
+}
+
 int FastState::get_passes() const {
     return m_passes;
 }
@@ -155,6 +159,7 @@ void FastState::set_passes(int val) {
 void FastState::increment_passes() {
     m_passes++;
     if (m_passes > 4) m_passes = 4;
+    m_total_passes++;
 }
 
 int FastState::get_to_move() const {

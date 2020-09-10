@@ -83,7 +83,7 @@ public:
 
     int get_boardsize() const;
     vertex_t get_state(int x, int y) const;
-    vertex_t get_state(int vertex) const ;
+    vertex_t get_state(int vertex) const;
     int get_vertex(int x, int y) const;
     int get_vertex(const int index) const;
     int get_index(const int vertex) const;

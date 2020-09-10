@@ -53,6 +53,7 @@ public:
     void set_handicap(int hcap);
     int get_handicap() const;
     int get_passes() const;
+    int get_total_passes() const;
     int get_to_move() const;
     int get_prisoners() const;
     void set_to_move(int tomove);
@@ -84,6 +85,7 @@ public:
     float m_komi;
     int m_handicap;
     int m_passes;
+    int m_total_passes;
     int m_komove;
     size_t m_movenum;
     int m_lastmove;

@@ -116,6 +116,7 @@ extern bool cfg_dumbpass;
 extern bool cfg_restrict_tt;
 extern bool cfg_recordvisits;
 extern bool cfg_crazy;
+extern bool cfg_vshuman_mode;
 // extern float cfg_crazy_rate;
 #ifdef USE_OPENCL
 extern std::vector<int> cfg_gpus;

@@ -693,22 +693,23 @@ int UCTSearch::get_best_move(passflag_t passflag) {
 
     // do we want to fiddle with the best move because of the rule set?
     if (passflag & UCTSearch::NOPASS || cfg_japanese_mode) {
+        myprintf("Still less than 3 passes.\n");
         // were we going to pass?
-        if (bestmove == FastBoard::PASS) {
-            UCTNode * nopass = m_root->get_nopass_child(m_rootstate);
+        // if (bestmove == FastBoard::PASS) {
+        //     UCTNode * nopass = m_root->get_nopass_child(m_rootstate);
 
-            if (nopass != nullptr) {
-                myprintf("Preferring not to pass.\n");
-                bestmove = nopass->get_move();
-                if (nopass->first_visit()) {
-                    besteval = 1.0f;
-                } else {
-                    besteval = nopass->get_raw_eval(color);
-                }
-            } else {
-                myprintf("Pass is the only acceptable move.\n");
-            }
-        }
+        //     if (nopass != nullptr) {
+        //         myprintf("Preferring not to pass.\n");
+        //         bestmove = nopass->get_move();
+        //         if (nopass->first_visit()) {
+        //             besteval = 1.0f;
+        //         } else {
+        //             besteval = nopass->get_raw_eval(color);
+        //         }
+        //     } else {
+        //         myprintf("Pass is the only acceptable move.\n");
+        //     }
+        // }
     } else if (!cfg_dumbpass) {
         const auto relative_score =
             (color == FastBoard::BLACK ? 1 : -1) * m_rootstate.final_score();
@@ -735,36 +736,38 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             // Do we lose by passing?
             if (relative_score < 0.0f) {
                 myprintf("Passing loses :-(\n");
-                // Find a valid non-pass move.
-                UCTNode * nopass = m_root->get_nopass_child(m_rootstate);
-                if (nopass != nullptr) {
-                    myprintf("Avoiding pass because it loses.\n");
-                    bestmove = nopass->get_move();
-                    if (nopass->first_visit()) {
-                        besteval = 1.0f;
-                    } else {
-                        besteval = nopass->get_raw_eval(color);
-                    }
-                } else {
-                    myprintf("No alternative to passing.\n");
-                }
+                myprintf("Still less than 3 passes.\n");
+                // // Find a valid non-pass move.
+                // UCTNode * nopass = m_root->get_nopass_child(m_rootstate);
+                // if (nopass != nullptr) {
+                //     myprintf("Avoiding pass because it loses.\n");
+                //     bestmove = nopass->get_move();
+                //     if (nopass->first_visit()) {
+                //         besteval = 1.0f;
+                //     } else {
+                //         besteval = nopass->get_raw_eval(color);
+                //     }
+                // } else {
+                //     myprintf("No alternative to passing.\n");
+                // }
             } else if (relative_score > 0.0f) {
                 myprintf("Passing wins :-)\n");
             } else {
                 myprintf("Passing draws :-|\n");
-                // Find a valid non-pass move.
-                const auto nopass = m_root->get_nopass_child(m_rootstate);
-                if (nopass != nullptr && !nopass->first_visit()) {
-                    const auto nopass_eval = nopass->get_raw_eval(color);
-                    if (nopass_eval > 0.5f) {
-                        myprintf("Avoiding pass because there could be a winning alternative.\n");
-                        bestmove = nopass->get_move();
-                        besteval = nopass_eval;
-                    }
-                }
-                if (bestmove == FastBoard::PASS) {
-                    myprintf("No seemingly better alternative to passing.\n");
-                }
+                myprintf("Still less than 3 passes.\n");
+                // // Find a valid non-pass move.
+                // const auto nopass = m_root->get_nopass_child(m_rootstate);
+                // if (nopass != nullptr && !nopass->first_visit()) {
+                //     const auto nopass_eval = nopass->get_raw_eval(color);
+                //     if (nopass_eval > 0.5f) {
+                //         myprintf("Avoiding pass because there could be a winning alternative.\n");
+                //         bestmove = nopass->get_move();
+                //         besteval = nopass_eval;
+                //     }
+                // }
+                // if (bestmove == FastBoard::PASS) {
+                //     myprintf("No seemingly better alternative to passing.\n");
+                // }
             }
         } else if (m_rootstate.get_last_move() == FastBoard::PASS) {
             // Opponents last move was passing.
@@ -785,20 +788,28 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                     bestmove = FastBoard::PASS;
                 }
             }
+
+            myprintf("Still less than 3 passes.\n");
         }
     } else if(m_passlock) {
-        UCTNode * nopass = m_root->get_nopass_child(m_rootstate);
-        if (nopass != nullptr) {
-            myprintf("Avoiding pass because of passlock.\n");
-            bestmove = nopass->get_move();
-            if (nopass->first_visit()) {
-                besteval = 1.0f;
-            } else {
-                besteval = nopass->get_raw_eval(color);
-            }
-        } else {
-            myprintf("No alternative to passing.\n");
-        }
+        myprintf("Still less than 3 passes.\n");
+        // UCTNode * nopass = m_root->get_nopass_child(m_rootstate);
+        // if (nopass != nullptr) {
+        //     myprintf("Avoiding pass because of passlock.\n");
+        //     bestmove = nopass->get_move();
+        //     if (nopass->first_visit()) {
+        //         besteval = 1.0f;
+        //     } else {
+        //         besteval = nopass->get_raw_eval(color);
+        //     }
+        // } else {
+        //     myprintf("No alternative to passing.\n");
+        // }
+    }
+
+    if (cfg_vshuman_mode && m_rootstate.get_last_move() == FastBoard::PASS && m_rootstate.get_total_passes() > 2) {
+        myprintf("Force to pass.\n");
+        bestmove = FastBoard::PASS;
     }
 
     if (cfg_acceleration_endgame) {
@@ -1209,15 +1220,24 @@ int UCTSearch::think(int color, passflag_t passflag) {
 
     // int bestmove = get_best_move(passflag);
 
-    if (int(m_rootstate.get_movenum()) < 4) {
+    if (cfg_crazy && int(m_rootstate.get_movenum()) < 4) {
         //BoardSize -> 21*21
-        std::vector<int> opening_values{332, 122, 362, 68, 78, 108, 318, 372};
-        std::vector<int> ignore_indexes{3, 1, 2, 0, 1, 0, 2, 3};
-        std::vector<int> ignore_values[]{{66, 67, 68, 87, 88, 89, 108, 109, 110},
-                                         {78, 79, 80, 99, 100, 101, 120, 121, 122},
-                                         {318, 319, 320, 339, 340, 341, 360, 361, 362},
-                                         {330, 331, 332, 351, 352, 353, 372, 373, 374}};
-        std::vector<int> legal_vertex;
+        // std::vector<int> opening_values{332, 122, 362, 68, 78, 108, 318, 372};
+        // std::vector<int> ignore_indexes{3, 1, 2, 0, 1, 0, 2, 3};
+        // std::vector<int> ignore_values[]{{66, 67, 68, 87, 88, 89, 108, 109, 110},
+        //                                  {78, 79, 80, 99, 100, 101, 120, 121, 122},
+        //                                  {318, 319, 320, 339, 340, 341, 360, 361, 362},
+        //                                  {330, 331, 332, 351, 352, 353, 372, 373, 374}};
+        // std::vector<int> opening_values{330, 320, 120, 110};
+        // std::vector<int> ignore_indexes{3, 2, 1, 0};
+        // std::vector<int> ignore_values[]{{66, 67, 68, 87, 88, 89, 108, 109, 110},
+        //                                 {78, 79, 80, 99, 100, 101, 120, 121, 122},
+        //                                 {318, 319, 320, 339, 340, 341, 360, 361, 362},
+        //                                 {330, 331, 332, 351, 352, 353, 372, 373, 374}};
+        std::vector<int> opening_values{220};
+        std::vector<int> ignore_indexes{0};
+        std::vector<int> ignore_values[]{{199, 219, 220, 221, 241}};
+        // std::vector<int> legal_vertex;
         for (auto i = 0; i < opening_values.size(); i++) {
             if (m_rootstate.is_move_legal(color, opening_values[i])) {
                 int idx = ignore_indexes[i];
@@ -1231,13 +1251,14 @@ int UCTSearch::think(int color, passflag_t passflag) {
                 }
 
                 if (!ignore) {
-                    legal_vertex.emplace_back(opening_values[i]);
+                    bestmove = opening_values[i];
+                    break;
                 }
             }
         }
 
         // myprintf("Best Move: %d", legal_vertex[0]);
-        bestmove = legal_vertex[0];
+        // bestmove = legal_vertex[0];
 
         // if (legal_vertex.size() > 0) {
         //     std::random_device rnd;
